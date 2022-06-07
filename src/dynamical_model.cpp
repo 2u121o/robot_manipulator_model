@@ -55,14 +55,12 @@ void DynamicalModel::initializeMatrices(){
         if(i<DOFS) ac_i_.at(i).setZero();
     }
     a_i_.at(0) << 0, 0, 9.81;
-    f_.at(3) << 0, 0, 0;
-    tau_.at(3) << 0, 0, 0;
 
     u_.setZero();
 
 }
 
-Eigen::Vector3d DynamicalModel::rnea( Eigen::Vector3d q, Eigen::Vector3d dq, Eigen::Vector3d ddq){
+Eigen::Vector3d DynamicalModel::rnea(Eigen::Vector3d q, Eigen::Vector3d dq, Eigen::Vector3d ddq){
 
     initializeMatrices();
     forwardRecursion(q, dq, ddq);
@@ -82,7 +80,6 @@ void DynamicalModel::forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eig
     double alpha_i;
 
     Eigen::Vector3d t;
-//    t << a_[0]*cos(theta_i), a_[0]*sin(theta_i), d_[0];
 
 
     for(short int i=0; i<DOFS; i++){
@@ -104,13 +101,6 @@ void DynamicalModel::forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eig
 
         ac_i_.at(i) = a_i_.at(i+1) + d_omega_.at(i+1).cross(cog_.at(i)) + omega_.at(i+1).cross(omega_.at(i+1).cross(cog_.at(i)));
 
-//        std::cout << "step " << i << std::endl;
-//        std::cout << ac_i_.at(i) << std::endl;
-
-
-//        theta_i = q[i];
-//        alpha_i = alpha_[i];
-
 
     }
 
@@ -127,33 +117,37 @@ void DynamicalModel::backwardRecursion(Eigen::Vector3d q){
     double theta_i;
     double alpha_i;
 
-    Eigen::Matrix3d R;
-//    R << cos(theta_i), -sin(theta_i)*cos(alpha_i), sin(theta_i)*sin(alpha_i),
-//         sin(theta_i), cos(theta_i)*cos(alpha_i), -cos(theta_i)*sin(alpha_i),
-//         0           , sin(alpha_i)             , cos(alpha_i);
+    Eigen::Matrix3d R, Rp1;
+    //the first transfomation is identity because it transfom
+    //from the tip to the environment so it remain like it is
+    Rp1 << 1, 0, 0,
+           0, 1, 0,
+           0, 0, 1;
 
     Eigen::Vector3d t;
-//    t << a_[2]*cos(theta_i), a_[2]*sin(theta_i), d_[2];
 
     for(short int i=DOFS-1; i>=0; i--){
-    std::cout << i << std::endl;
+
         theta_i = q[i];
         alpha_i = alpha_[i];
+
 
        R << cos(theta_i), -sin(theta_i)*cos(alpha_i), sin(theta_i)*sin(alpha_i),
             sin(theta_i), cos(theta_i)*cos(alpha_i) , -cos(theta_i)*sin(alpha_i),
             0           , sin(alpha_i)              , cos(alpha_i);
 
-
        t << a_[i]*cos(theta_i), a_[i]*sin(theta_i), d_[i];
 
-        f_.at(i) = R*f_.at(i+1) + m_[i]*(ac_i_.at(i));
+        f_.at(i) = Rp1*f_.at(i+1) + m_[i]*(ac_i_.at(i));
 
-        tau_.at(i) = R*tau_.at(i+1) + (R*(f_.at(i+1))).cross(cog_.at(i)) - f_.at(i).cross(t + cog_.at(i)) +
+        tau_.at(i) = Rp1*tau_.at(i+1) + (Rp1*(f_.at(i+1))).cross(cog_.at(i)) - f_.at(i).cross(R.transpose()*t + cog_.at(i)) +
                     inertia_.at(i)*(d_omega_.at(i+1)) + omega_.at(i+1).cross(inertia_.at(i) * (omega_.at(i+1)));
 
         u_[i] = tau_.at(i).transpose()*R.transpose()*z;
 
+        Rp1 << cos(theta_i), -sin(theta_i)*cos(alpha_i), sin(theta_i)*sin(alpha_i),
+                sin(theta_i), cos(theta_i)*cos(alpha_i) , -cos(theta_i)*sin(alpha_i),
+                0           , sin(alpha_i)              , cos(alpha_i);
 
 
     }
