@@ -9,14 +9,19 @@ int main(int argc, char *argv[])
     srand((unsigned int) time(0));
 
     DynamicalModel model_n;
-    Eigen::Vector3d q;
-    Eigen::Vector3d dq;
-    Eigen::Vector3d ddq;
+    Eigen::VectorXd q;
+    Eigen::VectorXd dq;
+    Eigen::VectorXd ddq;
+
+    q.resize(3);
+    dq.resize(3);
+    ddq.resize(3);
 
     q.setRandom();
 
 
-    Eigen::Vector3d n;
+    Eigen::VectorXd n;
+    n.resize(3);
     dq.setRandom();
     ddq.setZero();
     n = model_n.rnea(q, dq, ddq);
@@ -26,7 +31,8 @@ int main(int argc, char *argv[])
     M.resize(3,3);
     M.setZero();
 
-    Eigen::Vector3d M_i;
+    Eigen::VectorXd M_i;
+    M_i.resize(3);
     M_i.setZero();
     dq.setZero();
     for(short int i=0; i<3; i++){

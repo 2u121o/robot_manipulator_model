@@ -4,6 +4,7 @@ DynamicalModel::DynamicalModel(){
 
     //##########Dynamic Parameters #########//
     //masses
+    m_.resize(DOFS);
     m_ << 1, 0.6, 0.2;
 
     //inertias
@@ -24,6 +25,9 @@ DynamicalModel::DynamicalModel(){
     cog_.at(1) << -0.2, 0.0, 0.0;
     cog_.at(2) << -0.05, 0.0, 0.01;
 
+    alpha_.resize(DOFS);
+    l_.resize(DOFS);
+    d_.resize(DOFS);
     alpha_ << M_PI, 0, 0;
     l_ << 0, 0.6, 0.1;
     d_ << 0.3, 0, 0;
@@ -38,14 +42,13 @@ DynamicalModel::DynamicalModel(){
     //##########initialization forces and torques#########//
     f_.resize(DOFS+1);
     tau_.resize(DOFS+1);
-
-
+    u_.resize(DOFS);
 
 }
 
 
 
-Eigen::Vector3d DynamicalModel::rnea(Eigen::Vector3d q, Eigen::Vector3d dq, Eigen::Vector3d ddq){
+Eigen::VectorXd DynamicalModel::rnea(Eigen::VectorXd q, Eigen::VectorXd dq, Eigen::VectorXd ddq){
 
     initializeMatrices();
     forwardRecursion(q, dq, ddq);
@@ -55,7 +58,7 @@ Eigen::Vector3d DynamicalModel::rnea(Eigen::Vector3d q, Eigen::Vector3d dq, Eige
 
 }
 
-void DynamicalModel::forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eigen::Vector3d ddq){
+void DynamicalModel::forwardRecursion(Eigen::VectorXd q, Eigen::VectorXd dq, Eigen::VectorXd ddq){
 
     Eigen::Vector3d z;
     z << 0, 0, 1;
@@ -91,7 +94,7 @@ void DynamicalModel::forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eig
 }
 
 
-void DynamicalModel::backwardRecursion(Eigen::Vector3d q){
+void DynamicalModel::backwardRecursion(Eigen::VectorXd q){
 
     Eigen::Vector3d g;
     g << 0, 0, -9.81;
@@ -160,7 +163,6 @@ void DynamicalModel::computeRotationTranslation(Eigen::Matrix3d &R, Eigen::Vecto
     double d = dh_params[1];
     double a = dh_params[2];
     double alpha = dh_params[3];
-
 
     R << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha),
          sin(theta), cos(theta)*cos(alpha) , -cos(theta)*sin(alpha),
