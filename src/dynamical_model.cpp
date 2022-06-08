@@ -25,15 +25,14 @@ DynamicalModel::DynamicalModel(){
     cog_.at(2) << -0.05, 0.0, 0.01;
 
     alpha_ << M_PI, 0, 0;
-    a_ << 0, 0.6, 0.1;
+    l_ << 0, 0.6, 0.1;
     d_ << 0.3, 0, 0;
 
     //##########initialization velocities, accelleration#########//
     omega_.resize(DOFS+1);
     d_omega_.resize(DOFS+1);
-    a_i_.resize(DOFS+1);
-    ac_i_.resize(DOFS);
-
+    a_.resize(DOFS+1);
+    ac_.resize(DOFS);
 
 
     //##########initialization forces and torques#########//
@@ -44,21 +43,7 @@ DynamicalModel::DynamicalModel(){
 
 }
 
-void DynamicalModel::initializeMatrices(){
 
-    for(short int i=0; i<DOFS+1; i++){
-        omega_.at(i).setZero();
-        d_omega_.at(i).setZero();
-        a_i_.at(i).setZero();
-        f_.at(i).setZero();
-        tau_.at(i).setZero();
-        if(i<DOFS) ac_i_.at(i).setZero();
-    }
-    a_i_.at(0) << 0, 0, 9.81;
-
-    u_.setZero();
-
-}
 
 Eigen::Vector3d DynamicalModel::rnea(Eigen::Vector3d q, Eigen::Vector3d dq, Eigen::Vector3d ddq){
 
@@ -74,33 +59,32 @@ void DynamicalModel::forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eig
 
     Eigen::Vector3d z;
     z << 0, 0, 1;
+
     Eigen::Matrix3d R;
-
-    double theta_i;
-    double alpha_i;
-
     Eigen::Vector3d t;
+
+    std::vector<double> dh_parameters;
+    dh_parameters.resize(4);
 
 
     for(short int i=0; i<DOFS; i++){
 
-        theta_i = q[i];
-        alpha_i = alpha_[i];
-        //is faster to inertia_define directly the transpose
-        R << cos(theta_i), -sin(theta_i)*cos(alpha_i), sin(theta_i)*sin(alpha_i),
-             sin(theta_i), cos(theta_i)*cos(alpha_i), -cos(theta_i)*sin(alpha_i),
-             0           , sin(alpha_i)             , cos(alpha_i);
+        dh_parameters.at(0) = q[i];
+        dh_parameters.at(1) = d_[i];
+        dh_parameters.at(2) = l_[i];
+        dh_parameters.at(3) = alpha_[i];
 
-        t << a_[i]*cos(theta_i), a_[i]*sin(theta_i), d_[i];
+
+        computeRotationTranslation(R, t, dh_parameters);
+
 
         omega_.at(i+1) = R.transpose()*(omega_.at(i) + dq[i]*z);
 
         d_omega_.at(i+1) = R.transpose()*(d_omega_.at(i) + ddq[i]*z + dq[i]*(omega_.at(i).cross(z)));
 
-        a_i_.at(i+1) = R.transpose()*a_i_.at(i) + d_omega_.at(i+1).cross(R.transpose()*t) + omega_.at(i+1).cross(omega_.at(i+1).cross(R.transpose()*t));
+        a_.at(i+1) = R.transpose()*a_.at(i) + d_omega_.at(i+1).cross(R.transpose()*t) + omega_.at(i+1).cross(omega_.at(i+1).cross(R.transpose()*t));
 
-        ac_i_.at(i) = a_i_.at(i+1) + d_omega_.at(i+1).cross(cog_.at(i)) + omega_.at(i+1).cross(omega_.at(i+1).cross(cog_.at(i)));
-
+        ac_.at(i) = a_.at(i+1) + d_omega_.at(i+1).cross(cog_.at(i)) + omega_.at(i+1).cross(omega_.at(i+1).cross(cog_.at(i)));
 
     }
 
@@ -108,50 +92,80 @@ void DynamicalModel::forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eig
 
 
 void DynamicalModel::backwardRecursion(Eigen::Vector3d q){
+
     Eigen::Vector3d g;
     g << 0, 0, -9.81;
 
     Eigen::Vector3d z;
     z << 0, 0, 1;
 
-    double theta_i;
-    double alpha_i;
-
     Eigen::Matrix3d R, Rp1;
+    Eigen::Vector3d t;
+
+    std::vector<double> dh_parameters;
+    dh_parameters.resize(4);
+
     //the first transfomation is identity because it transfom
     //from the tip to the environment so it remain like it is
     Rp1 << 1, 0, 0,
            0, 1, 0,
            0, 0, 1;
 
-    Eigen::Vector3d t;
 
     for(short int i=DOFS-1; i>=0; i--){
 
-        theta_i = q[i];
-        alpha_i = alpha_[i];
+
+        dh_parameters.at(0) = q[i];
+        dh_parameters.at(1) = d_[i];
+        dh_parameters.at(2) = l_[i];
+        dh_parameters.at(3) = alpha_[i];
 
 
-       R << cos(theta_i), -sin(theta_i)*cos(alpha_i), sin(theta_i)*sin(alpha_i),
-            sin(theta_i), cos(theta_i)*cos(alpha_i) , -cos(theta_i)*sin(alpha_i),
-            0           , sin(alpha_i)              , cos(alpha_i);
+        computeRotationTranslation(R, t, dh_parameters);
 
-       t << a_[i]*cos(theta_i), a_[i]*sin(theta_i), d_[i];
-
-        f_.at(i) = Rp1*f_.at(i+1) + m_[i]*(ac_i_.at(i));
+        f_.at(i) = Rp1*f_.at(i+1) + m_[i]*(ac_.at(i));
 
         tau_.at(i) = Rp1*tau_.at(i+1) + (Rp1*(f_.at(i+1))).cross(cog_.at(i)) - f_.at(i).cross(R.transpose()*t + cog_.at(i)) +
                     inertia_.at(i)*(d_omega_.at(i+1)) + omega_.at(i+1).cross(inertia_.at(i) * (omega_.at(i+1)));
 
         u_[i] = tau_.at(i).transpose()*R.transpose()*z;
 
-        Rp1 << cos(theta_i), -sin(theta_i)*cos(alpha_i), sin(theta_i)*sin(alpha_i),
-                sin(theta_i), cos(theta_i)*cos(alpha_i) , -cos(theta_i)*sin(alpha_i),
-                0           , sin(alpha_i)              , cos(alpha_i);
+        computeRotationTranslation(Rp1, t, dh_parameters);
 
 
     }
 
 }
 
+void DynamicalModel::initializeMatrices(){
+
+    for(short int i=0; i<DOFS+1; i++){
+        omega_.at(i).setZero();
+        d_omega_.at(i).setZero();
+        a_.at(i).setZero();
+        f_.at(i).setZero();
+        tau_.at(i).setZero();
+        if(i<DOFS) ac_.at(i).setZero();
+    }
+    a_.at(0) << 0, 0, 9.81;
+
+    u_.setZero();
+
+}
+
+
+void DynamicalModel::computeRotationTranslation(Eigen::Matrix3d &R, Eigen::Vector3d &t, std::vector<double> dh_params){
+
+    double theta = dh_params[0];
+    double d = dh_params[1];
+    double a = dh_params[2];
+    double alpha = dh_params[3];
+
+
+    R << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha),
+         sin(theta), cos(theta)*cos(alpha) , -cos(theta)*sin(alpha),
+         0           , sin(alpha)              , cos(alpha);
+
+    t << a*cos(theta), a*sin(theta), d;
+}
 

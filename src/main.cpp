@@ -1,16 +1,14 @@
-//IMPLEMENTA UN 2R ROBOT CHE E MOLTO PIU SEMPLICE DA DEBBUGGARE
+
 #include "dynamical_model.h"
 
 #include <Eigen/Dense>
 
 int main(int argc, char *argv[])
 {
-    //I set the seams for the random number generator
     //otherwise it returns always the same number
     srand((unsigned int) time(0));
 
-   // DynamicalModel model_n;
-
+    DynamicalModel model_n;
     Eigen::Vector3d q;
     Eigen::Vector3d dq;
     Eigen::Vector3d ddq;
@@ -21,7 +19,7 @@ int main(int argc, char *argv[])
     Eigen::Vector3d n;
     dq.setRandom();
     ddq.setZero();
-   // model_n.rnea(n, q, dq, ddq);
+    n = model_n.rnea(q, dq, ddq);
 
     DynamicalModel model_M;
     Eigen::MatrixXd M;
@@ -42,7 +40,9 @@ int main(int argc, char *argv[])
     }
 
 
-    //there is an error because the inertia matrix is not symmetric
+    std::cout << "--------------------n vector--------------------" << std::endl;
+    std::cout << n << std::endl;
+
     std::cout << "--------------------M matrix--------------------" << std::endl;
     std::cout << M << std::endl;
 
