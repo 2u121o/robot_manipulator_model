@@ -6,11 +6,14 @@ include_directories(include)
 
 set(SOURCES
     src/dynamical_model.cpp
+    src/link.cpp
     src/main.cpp
+
 )
 
 set(HEADERS
     include/dynamical_model.h
+    include/link.h
 
 )
 
