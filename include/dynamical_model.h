@@ -12,7 +12,7 @@ class DynamicalModel{
 public:
     DynamicalModel();
 
-    Eigen::Vector3d rnea( Eigen::Vector3d q, Eigen::Vector3d dq, Eigen::Vector3d ddq);
+    Eigen::Vector3d rnea( const Eigen::Vector3d &q, const Eigen::Vector3d &dq, const Eigen::Vector3d &ddq);
 
 private:
     const int DOFS = 3;
@@ -26,6 +26,12 @@ private:
     Eigen::Vector3d l_;
     Eigen::Vector3d d_;
 
+    std::vector<Eigen::Matrix3d> R_;
+    std::vector<Eigen::Vector3d> t_;
+
+    Eigen::Vector3d z_;
+    Eigen::Vector3d g_;
+
     std::vector<Eigen::Vector3d> omega_;    //angular velocity
     std::vector<Eigen::Vector3d> d_omega_;  //angular acceleration
     std::vector<Eigen::Vector3d> a_;      //linear acceleration at frame i in frame i
@@ -38,13 +44,13 @@ private:
 
     void initializeMatrices();
 
-    void forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eigen::Vector3d ddq);
+     void forwardRecursion(const Eigen::Vector3d &q, const Eigen::Vector3d &dq, const Eigen::Vector3d &ddq);
 
-    void backwardRecursion(Eigen::Vector3d q);
+     void backwardRecursion(const Eigen::Vector3d &q);
 
     //in the dh_parameters the values are in the following order
     //theta d a alpha
-    void computeRotationTranslation(Eigen::Matrix3d &R, Eigen::Vector3d &t, std::vector<double> dh_params);
+    void computeRotationTranslation(const Eigen::Vector3d &q);
 
 
 
