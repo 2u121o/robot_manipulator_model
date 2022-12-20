@@ -4,29 +4,72 @@ DynamicalModel::DynamicalModel(){
 
     //##########Dynamic Parameters #########//
     //masses
-    m_ << 1, 0.6, 0.2;
+    m_.resize(DOFS);
+    m_ << 7.9637582, 2.6189549, 7.5440000, 2.3488000, 2.3432207, 8.2857161;
 
     //inertias
     inertia_.resize(DOFS);
+    // inertia_.at(0) << 0.047361000, 0, 0,
+    //                   0, 0.027948983, 0,
+    //                   0, 0, 0.040138000;
+    // inertia_.at(1) << 0.89171709, 0, 0,
+    //                   0, 1.7625421, 0,
+    //                   0, 0, 2.5169801;
+    // inertia_.at(2) << 0.66028304, 0, 0,
+    //                   0, 0.28351611, 0,
+    //                   0, 0, 0.93963656;
+
+    // inertia_.at(3) << 0.0, 0, 0,
+    //                   0, 0.36765057, 0,
+    //                   0, 0, 0.36765057;
+
+    // inertia_.at(4) << 0.0, 0, 0,
+    //                   0, 0.13644056, 0,
+    //                   0, 0, 0.0013644056;
+
+    // inertia_.at(5) << 0.014304167, 0, 0,
+    //                   0, 0.010091649, 0,
+    //                   0, 0, 0.024395716;
+
     inertia_.at(0) << 0.1, 0, 0,
                       0, 0.1, 0,
                       0, 0, 0.1;
     inertia_.at(1) << 0.1, 0, 0,
                       0, 0.1, 0,
-                      0, 0, 0.1;
+                      0, 0,0.1;
     inertia_.at(2) << 0.1, 0, 0,
                       0, 0.1, 0,
                       0, 0, 0.1;
 
+    inertia_.at(3) << 0.1, 0, 0,
+                      0, 0.1, 0,
+                      0, 0, 0.1;
+
+    inertia_.at(4) << 0.1, 0, 0,
+                      0, 0.1, 0,
+                      0, 0, 0.1;
+
+    inertia_.at(5) << 0.1, 0, 0,
+                      0, 0.1, 0,
+                      0, 0, 0.1;
+
+
     //cogs expressed wrt the next frame so ready to use in the formulas without transformation
     cog_.resize(DOFS);
-    cog_.at(0) << 0.01, 0.1, 0;
-    cog_.at(1) << -0.2, 0.0, 0.0;
-    cog_.at(2) << -0.05, 0.0, 0.01;
+    cog_.at(0) << -0.0023983783, -0.051099000, -0.0064075029;
+    cog_.at(1) << -0.027199000, -0.050000000, -0.080318000;
+    cog_.at(2) << 0.0062422845, 0.030640000, 0.063114058;
+    cog_.at(3) << 0.035455313, 0.021296500, -0.010879600;
+    cog_.at(4) << 0.0038853698, 0.025798751, 0.08656600;
+    cog_.at(5) << 0.0035370346, 0.0021101928, -0.025491905;
 
-    alpha_ << M_PI, 0, 0;
-    l_ << 0, 0.6, 0.1;
-    d_ << 0.3, 0, 0;
+
+    alpha_.resize(DOFS);
+    l_.resize(DOFS);
+    d_.resize(DOFS);
+    alpha_ << M_PI/2, M_PI, M_PI/2, -M_PI/2, M_PI/2, 0.0;
+    l_ << 0.0, 0.38, 0.0, 0.0, 0.0, 0.0;
+    d_ << 0.22, 0.0, 0.0, 0.42, 0.0, 0.157;
 
     //##########initialization velocities, accelleration#########//
     omega_.resize(DOFS+1);
@@ -39,13 +82,13 @@ DynamicalModel::DynamicalModel(){
     f_.resize(DOFS+1);
     tau_.resize(DOFS+1);
 
-
+    u_.resize(DOFS);
 
 }
 
 
 
-Eigen::Vector3d DynamicalModel::rnea(Eigen::Vector3d q, Eigen::Vector3d dq, Eigen::Vector3d ddq){
+Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq){
 
     initializeMatrices();
     forwardRecursion(q, dq, ddq);
@@ -55,7 +98,7 @@ Eigen::Vector3d DynamicalModel::rnea(Eigen::Vector3d q, Eigen::Vector3d dq, Eige
 
 }
 
-void DynamicalModel::forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eigen::Vector3d ddq){
+void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq){
 
     Eigen::Vector3d z;
     z << 0, 0, 1;
@@ -75,23 +118,29 @@ void DynamicalModel::forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eig
         dh_parameters.at(3) = alpha_[i];
 
 
-        computeRotationTranslation(R, t, dh_parameters);
+       computeRotationTranslation(R, t, dh_parameters);
 
 
         omega_.at(i+1) = R.transpose()*(omega_.at(i) + dq[i]*z);
 
-        d_omega_.at(i+1) = R.transpose()*(d_omega_.at(i) + ddq[i]*z + dq[i]*(omega_.at(i).cross(z)));
+        d_omega_.at(i+1) = R.transpose()*(d_omega_.at(i) + ddq[i]*z + (dq[i]*(omega_.at(i)).cross(z)));
 
         a_.at(i+1) = R.transpose()*a_.at(i) + d_omega_.at(i+1).cross(R.transpose()*t) + omega_.at(i+1).cross(omega_.at(i+1).cross(R.transpose()*t));
 
         ac_.at(i) = a_.at(i+1) + d_omega_.at(i+1).cross(cog_.at(i)) + omega_.at(i+1).cross(omega_.at(i+1).cross(cog_.at(i)));
+
+        std::cout << "t --> " << R.transpose()*t << std::endl;
+        // std::cout << "omega_.at(i+1) --> " << omega_.at(i+1) << std::endl
+        // << "d_omega_.at(i+1) --> " << d_omega_.at(i+1) << std::endl
+        // << "a_.at(i+1) --> " << a_.at(i+1) << std::endl
+        // << "ac_.at(i) --> " << ac_.at(i) << std::endl;
 
     }
 
 }
 
 
-void DynamicalModel::backwardRecursion(Eigen::Vector3d q){
+void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q){
 
     Eigen::Vector3d g;
     g << 0, 0, -9.81;
@@ -99,8 +148,9 @@ void DynamicalModel::backwardRecursion(Eigen::Vector3d q){
     Eigen::Vector3d z;
     z << 0, 0, 1;
 
-    Eigen::Matrix3d R, Rp1;
+    Eigen::Matrix3d R;
     Eigen::Vector3d t;
+    Eigen::Matrix3d Rp1;
 
     std::vector<double> dh_parameters;
     dh_parameters.resize(4);
@@ -114,8 +164,10 @@ void DynamicalModel::backwardRecursion(Eigen::Vector3d q){
 
     for(short int i=DOFS-1; i>=0; i--){
 
-
-        dh_parameters.at(0) = q[i];
+        if(i==1 || i==2)
+            dh_parameters.at(0) = q[i]+M_PI;
+        else
+            dh_parameters.at(0) = q[i];
         dh_parameters.at(1) = d_[i];
         dh_parameters.at(2) = l_[i];
         dh_parameters.at(3) = alpha_[i];
@@ -123,7 +175,7 @@ void DynamicalModel::backwardRecursion(Eigen::Vector3d q){
 
         computeRotationTranslation(R, t, dh_parameters);
 
-        f_.at(i) = Rp1*f_.at(i+1) + m_[i]*(ac_.at(i));
+       f_.at(i) = Rp1*f_.at(i+1) + m_[i]*(ac_.at(i));
 
         tau_.at(i) = Rp1*tau_.at(i+1) + (Rp1*(f_.at(i+1))).cross(cog_.at(i)) - f_.at(i).cross(R.transpose()*t + cog_.at(i)) +
                     inertia_.at(i)*(d_omega_.at(i+1)) + omega_.at(i+1).cross(inertia_.at(i) * (omega_.at(i+1)));
@@ -131,8 +183,6 @@ void DynamicalModel::backwardRecursion(Eigen::Vector3d q){
         u_[i] = tau_.at(i).transpose()*R.transpose()*z;
 
         computeRotationTranslation(Rp1, t, dh_parameters);
-
-
     }
 
 }
@@ -150,6 +200,7 @@ void DynamicalModel::initializeMatrices(){
     a_.at(0) << 0, 0, 9.81;
 
     u_.setZero();
+    
 
 }
 
