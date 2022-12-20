@@ -4,7 +4,7 @@ DynamicalModel::DynamicalModel(){
 
     //##########Dynamic Parameters #########//
     //masses
-    m_ << 1, 0.6, 0.2;
+    m_ << 1, 1, 1;
 
     //inertias
     inertia_.resize(DOFS);
@@ -20,13 +20,13 @@ DynamicalModel::DynamicalModel(){
 
     //cogs expressed wrt the next frame so ready to use in the formulas without transformation
     cog_.resize(DOFS);
-    cog_.at(0) << 0.01, 0.1, 0;
-    cog_.at(1) << -0.2, 0.0, 0.0;
-    cog_.at(2) << -0.05, 0.0, 0.01;
+    cog_.at(0) << -0.2, 0.0, 0.0;
+    cog_.at(1) <<  0.0, -0.2, 0.0;
+    cog_.at(2) << -0.2, 0.0, 0.0;
 
-    alpha_ << M_PI, 0, 0;
-    l_ << 0, 0.6, 0.1;
-    d_ << 0.3, 0, 0;
+    alpha_ << 0, M_PI/2, 0;
+    l_ << 0.561, 0.0, 0.41;
+    d_ << 0.0, 0.6, 0;
 
     //##########initialization velocities, accelleration#########//
     omega_.resize(DOFS+1);
@@ -68,15 +68,16 @@ void DynamicalModel::forwardRecursion(Eigen::Vector3d q, Eigen::Vector3d dq, Eig
 
 
     for(short int i=0; i<DOFS; i++){
-
-        dh_parameters.at(0) = q[i];
+        if(i==0)
+            dh_parameters.at(0) = q[i]+M_PI;
+        else
+            dh_parameters.at(0) = q[i];
         dh_parameters.at(1) = d_[i];
         dh_parameters.at(2) = l_[i];
         dh_parameters.at(3) = alpha_[i];
 
 
         computeRotationTranslation(R, t, dh_parameters);
-
 
         omega_.at(i+1) = R.transpose()*(omega_.at(i) + dq[i]*z);
 
@@ -125,13 +126,12 @@ void DynamicalModel::backwardRecursion(Eigen::Vector3d q){
 
         f_.at(i) = Rp1*f_.at(i+1) + m_[i]*(ac_.at(i));
 
-        tau_.at(i) = Rp1*tau_.at(i+1) + (Rp1*(f_.at(i+1))).cross(cog_.at(i)) - f_.at(i).cross(R.transpose()*t + cog_.at(i)) +
+        tau_.at(i) = Rp1*tau_.at(i+1) + (Rp1*f_.at(i+1)).cross(cog_.at(i)) - f_.at(i).cross(R.transpose()*t + cog_.at(i)) +
                     inertia_.at(i)*(d_omega_.at(i+1)) + omega_.at(i+1).cross(inertia_.at(i) * (omega_.at(i+1)));
 
         u_[i] = tau_.at(i).transpose()*R.transpose()*z;
 
         computeRotationTranslation(Rp1, t, dh_parameters);
-
 
     }
 
