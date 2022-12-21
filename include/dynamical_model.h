@@ -12,7 +12,7 @@ class DynamicalModel{
 public:
     DynamicalModel();
 
-    Eigen::VectorXd rnea(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq);
+    Eigen::VectorXd rnea(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq, const Eigen::Vector3d gravity);
 
 private:
     const int DOFS = 6;
@@ -36,7 +36,7 @@ private:
 
     Eigen::VectorXd u_;                     //tau_ after projection
 
-    void initializeMatrices();
+    void initializeMatrices(const Eigen::Vector3d gravity);
 
     void forwardRecursion(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq);
 

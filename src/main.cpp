@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     dq.resize(DOFS);
     ddq.resize(DOFS);
 
-    q <<  0, 0.50, 0.50, 0, 0, 0;
+    q <<  0.1, 0.5, 0.5, 0.3, 0.2, 0.3;
     //q.setRandom();
    // q << 0, 0, 0.0, 0.0, 0.0, 0;
     //q << 0, 0, 0, 0, 0, 0;
@@ -38,16 +38,25 @@ int main(int argc, char *argv[])
     // auto end = std::chrono::high_resolution_clock::now();
     // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
 
-    // Eigen::VectorXd g;
-    // g.resize(DOFS);
-    // DynamicalModel model_g;
-    // dq.setZero();
-    // g = model_g.rnea(q, dq, ddq);
+    Eigen::VectorXd g;
+    g.resize(DOFS);
+    DynamicalModel model_g;
+     Eigen::Vector3d gravity_g;
+    gravity_g << 0,0,9.81;
+    dq.setZero();
+    ddq.setZero();
+    auto start_g = std::chrono::high_resolution_clock::now();
+    g = model_g.rnea(q, dq, ddq, gravity_g);
+    auto end_g = std::chrono::high_resolution_clock::now();
+    auto duration_g = std::chrono::duration_cast<std::chrono::microseconds>(end_g-start_g);
 
     DynamicalModel model_M;
     Eigen::MatrixXd M;
     M.resize(DOFS,DOFS);
     M.setZero();
+
+    Eigen::Vector3d gravity;
+    gravity << 0,0,0;
 
     Eigen::VectorXd M_i;
     M_i.resize(DOFS);
@@ -57,7 +66,7 @@ int main(int argc, char *argv[])
     for(short int i=0; i<DOFS; i++){
         ddq.setZero();
         ddq[i] = 1;
-        M_i = model_M.rnea( q, dq, ddq);
+        M_i = model_M.rnea( q, dq, ddq, gravity);
         for(short int j=0; j<DOFS; j++){
             M(j,i) = M_i[j];
         }
@@ -70,8 +79,9 @@ int main(int argc, char *argv[])
     // std::cout << n << std::endl;
     // std::cout << "Compute in " << duration.count() << std::endl;
 
-    // std::cout << "--------------------g vector--------------------" << std::endl;
-    // std::cout << g << std::endl;
+    std::cout << "--------------------g vector--------------------" << std::endl;
+    std::cout << g << std::endl;
+    std::cout << "Compute in " << duration_g.count() << std::endl;
 
     std::cout << "--------------------M matrix--------------------" << std::endl;
     std::cout << M << std::endl;
