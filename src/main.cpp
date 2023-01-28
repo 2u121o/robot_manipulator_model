@@ -1,5 +1,6 @@
 
 #include "dynamical_model.h"
+#include "kinematic_model.h"
 
 #include <Eigen/Dense>
 
@@ -24,6 +25,14 @@ int main(int argc, char *argv[])
 
     q <<  0.1, 0.5, 0.5, 0.3, 0.2, 0.3;
 
+    KinematicModel kinematic_model;
+    kinematic_model.setQ(q);
+    kinematic_model.computeJacobian();
+    std::cout << "------------------------------------------------" << std::endl;
+    std::cout << "--------------------Jacobian--------------------" << std::endl;
+    std::cout << "------------------------------------------------" << std::endl;
+
+    std::cout  << kinematic_model.getJacobian() << std::endl;
 
     Eigen::VectorXd g;
     g.resize(DOFS);

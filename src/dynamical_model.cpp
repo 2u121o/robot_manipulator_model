@@ -155,7 +155,6 @@ void DynamicalModel::initializeMatrices(const Eigen::Vector3d gravity){
 
     u_.setZero();
     
-
 }
 
 

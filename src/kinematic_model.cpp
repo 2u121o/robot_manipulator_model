@@ -52,6 +52,31 @@ void KinematicModel::computeForwardKinematic(int idx_first_link, int idx_last_li
 
 }
 
+void KinematicModel::computeJacobian(){
+
+    Eigen::Vector3d pos_ee_absolute;
+    pos_ee_absolute.setZero();
+    computeForwardKinematic(0, DOFS);
+    pos_ee_absolute = trans_;
+
+    Eigen::Vector3d pos_ee_relative;
+    pos_ee_relative.setZero();
+
+    Eigen::Vector3d z_i_minus_one;
+    z_i_minus_one.setZero();
+
+    Eigen::Vector3d z_i_minus_one_const;
+    z_i_minus_one_const << 0,0,1;
+
+    for(int i=0; i<DOFS; i++){
+        computeForwardKinematic(0, i+1);
+        z_i_minus_one = R_*z_i_minus_one_const;
+        pos_ee_relative = pos_ee_absolute - trans_;
+        jacobian_.block(0,i,3,1) = z_i_minus_one.cross(pos_ee_relative);
+        jacobian_.block(3,i,3,1) = z_i_minus_one;
+    }
+}
+
 void KinematicModel::setQ(const Eigen::VectorXd &q){
     q_ = q;
 }
@@ -68,6 +93,9 @@ Eigen::Matrix3d KinematicModel::getR(){
     return R_;
 }
 
+Eigen::MatrixXd KinematicModel::getJacobian(){
+    return jacobian_;
+}
 
 KinematicModel::~KinematicModel(){
 

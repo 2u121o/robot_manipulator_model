@@ -15,6 +15,7 @@ class KinematicModel{
         //      computeJacobian
 
         void computeForwardKinematic(int idx_first_link, int idx_last_link);
+        void computeJacobian();
 
         //Setter--------------------------
         void setQ(const Eigen::VectorXd &q);
@@ -23,6 +24,7 @@ class KinematicModel{
         Eigen::VectorXd getQ();
         Eigen::Vector3d getTrans();
         Eigen::Matrix3d getR();
+        Eigen::MatrixXd getJacobian();
 
     private:
 
