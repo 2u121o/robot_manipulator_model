@@ -12,7 +12,8 @@ int main(int argc, char *argv[])
     //otherwise it returns always the same number
     srand((unsigned int) time(0));
 
-    // DynamicalModel model_n;
+
+
     Eigen::VectorXd q;
     Eigen::VectorXd dq;
     Eigen::VectorXd ddq;
@@ -22,21 +23,7 @@ int main(int argc, char *argv[])
     ddq.resize(DOFS);
 
     q <<  0.1, 0.5, 0.5, 0.3, 0.2, 0.3;
-    //q.setRandom();
-   // q << 0, 0, 0.0, 0.0, 0.0, 0;
-    //q << 0, 0, 0, 0, 0, 0;
-    //q << 0, 0.50, 0.50;
 
-
-    // Eigen::VectorXd n;
-    // n.resize(DOFS);
-    // //dq.setRandom();
-    // dq << 0,0,0,0,0,0;
-    // ddq.setZero();
-    // auto start = std::chrono::high_resolution_clock::now();
-    // n = model_n.rnea(q, dq, ddq);
-    // auto end = std::chrono::high_resolution_clock::now();
-    // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
 
     Eigen::VectorXd g;
     g.resize(DOFS);
@@ -75,9 +62,6 @@ int main(int argc, char *argv[])
     auto end_m = std::chrono::high_resolution_clock::now();
     auto duration_m = std::chrono::duration_cast<std::chrono::microseconds>(end_m-start_m);
 
-    // std::cout << "--------------------n vector--------------------" << std::endl;
-    // std::cout << n << std::endl;
-    // std::cout << "Compute in " << duration.count() << std::endl;
 
     std::cout << "--------------------g vector--------------------" << std::endl;
     std::cout << g << std::endl;

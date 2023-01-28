@@ -7,6 +7,8 @@
 
 #include <Eigen/Dense>
 
+#include "kinematic_model.h"
+
 class DynamicalModel{
 
 public:
@@ -18,13 +20,10 @@ private:
     const int DOFS = 6;
     Eigen::VectorXd m_;
 
+    KinematicModel kinematic_model_;
+
     std::vector<Eigen::Matrix3d> inertia_; //3X3N tensor contains inertia matrix for each link
     std::vector<Eigen::Vector3d> cog_;     //3XN matrix contains cog vector for each link
-
-    //parameters of the DH table
-    Eigen::VectorXd alpha_;
-    Eigen::VectorXd l_;
-    Eigen::VectorXd d_;
 
     std::vector<Eigen::Vector3d> omega_;    //angular velocity
     std::vector<Eigen::Vector3d> d_omega_;  //angular acceleration
@@ -41,10 +40,6 @@ private:
     void forwardRecursion(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq);
 
     void backwardRecursion(const Eigen::VectorXd &q);
-
-    //in the dh_parameters the values are in the following order
-    //theta d a alpha
-    void computeRotationTranslation(Eigen::Matrix3d &R, Eigen::Vector3d &t, std::vector<double> dh_params);
 
 
 

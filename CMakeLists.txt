@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(rnea_robot_model)
+project(robot_maipulator_model)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -14,12 +14,13 @@ include_directories(include)
 
 set(SOURCES
     src/dynamical_model.cpp
+    src/kinematic_model.cpp
     src/main.cpp
 )
 
 set(HEADERS
     include/dynamical_model.h
-
+    include/kinematic_model.h
 )
 
 find_package(Eigen3 REQUIRED)
