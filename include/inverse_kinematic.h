@@ -3,6 +3,9 @@
 
 #include "kinematic_model.h"
 
+#include <fstream>
+#include <Eigen/Dense>
+
 class InverseKinematic{
 
     public:
@@ -26,9 +29,16 @@ class InverseKinematic{
         Eigen::VectorXd q_k_plus_one_;
         Eigen::VectorXd q_k_;
 
+        int iteration = 0;
+
         KinematicModel kinematic_model_;
 
+        std::ofstream fout;
+
         void initVariables();
+
+        void computeInitialGuess();
+        void computeSolution();
 
 };
 

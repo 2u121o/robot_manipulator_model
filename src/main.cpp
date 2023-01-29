@@ -3,6 +3,7 @@
 #include "kinematic_model.h"
 #include "inverse_kinematic.h"
 
+
 #include <Eigen/Dense>
 
 #include <chrono>
@@ -24,7 +25,7 @@ int main(int argc, char *argv[])
     dq.resize(DOFS);
     ddq.resize(DOFS);
 
-    q <<  0.32, 0.5, 0.5, 0.3, 0.2, 0.3;
+    q <<  0.32, 0.5, 0.8, 0.3, 0.2, 0.3;
 
     KinematicModel kinematic_model;
     kinematic_model.setQ(q);
@@ -37,7 +38,7 @@ int main(int argc, char *argv[])
 
     InverseKinematic ik;
     Eigen::Vector3d desired_pos; 
-    desired_pos << -0.28548,-0.0491852,1.32735;
+    desired_pos << -0.28548,-0.0491852,1.22735;
     Eigen::VectorXd solution;
     ik.setDesiredPos(desired_pos);
     ik.setQk(q);
