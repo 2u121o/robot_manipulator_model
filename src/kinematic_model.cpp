@@ -69,7 +69,7 @@ void KinematicModel::computeJacobian(){
     z_i_minus_one_const << 0,0,1;
 
     for(int i=0; i<DOFS; i++){
-        computeForwardKinematic(0, i+1);
+        computeForwardKinematic(0, i); //lerrore e probabilmente qui verifica questa parte 
         z_i_minus_one = R_*z_i_minus_one_const;
         pos_ee_relative = pos_ee_absolute - trans_;
         jacobian_.block(0,i,3,1) = z_i_minus_one.cross(pos_ee_relative);

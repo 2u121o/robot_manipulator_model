@@ -15,12 +15,14 @@ include_directories(include)
 set(SOURCES
     src/dynamical_model.cpp
     src/kinematic_model.cpp
+    src/inverse_kinematic.cpp
     src/main.cpp
 )
 
 set(HEADERS
     include/dynamical_model.h
     include/kinematic_model.h
+    include/inverse_kinematic.h
 )
 
 find_package(Eigen3 REQUIRED)
