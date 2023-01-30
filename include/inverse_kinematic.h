@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <Eigen/Dense>
+#include <cmath>
 
 class InverseKinematic{
 
