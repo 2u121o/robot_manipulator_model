@@ -13,11 +13,17 @@ void InverseKinematic::solveIk(Eigen::VectorXd &solution){
     fout.open("ik_solution.dat");
     if(fout) fout << "#iteration position_error_norm" << std::endl;
     computeInitialGuess();
-    std::cout << "q_k after IG --> " << q_k_ << std::endl;
     computeSolution();
-    fout.close();
+    
     solution = q_k_;
-
+    int first_link = 0;
+    int last_link = 5;
+    kinematic_model_.setQ(solution);
+    kinematic_model_.computeForwardKinematic(first_link, last_link);
+    //kinematic_model_.computeJacobian();
+   // kinematic_model_.getJacobian();
+    std::cout << "trans in solveIk --> " << kinematic_model_.getTrans() << std::endl;
+    fout.close();
 }
 
 void InverseKinematic::computeInitialGuess(){
@@ -28,7 +34,7 @@ void InverseKinematic::computeInitialGuess(){
     q = q_k_;
 
     int first_link = 0;
-    int last_link = 6;
+    int last_link = 5;
 
     kinematic_model_.computeForwardKinematic(first_link, last_link);
     Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans();
@@ -38,7 +44,7 @@ void InverseKinematic::computeInitialGuess(){
 
     bool is_ig_found = false;
 
-    while(pos_error.norm()>EPSILON_ERROR && iteration < 1000 && !is_ig_found){
+    while(pos_error.norm()>EPSILON_ERROR && iteration < 5 && !is_ig_found){
 
         Eigen::MatrixXd analitic_jacobian = jacobian.block(0,0,3,DOFS);
         Eigen::VectorXd dq = 0.8*analitic_jacobian.transpose()*pos_error;
@@ -51,18 +57,18 @@ void InverseKinematic::computeInitialGuess(){
         pos_error = desired_pos_ - kinematic_model_.getTrans();
 
         if(fout)
-            fout << iteration << " " <<  pos_error.norm() << " ";
+            fout << iteration << " " <<  pos_error.norm() << std::endl;
        
         iteration++;
         dpos_error_dt = (pos_error.norm()-pos_error_norm_prec)/0.001;
         pos_error_norm_prec = pos_error.norm();
 
-        if(std::abs(dpos_error_dt) < 0.0001){
-            is_ig_found = true;
-        }
+        // if(std::abs(dpos_error_dt) < 0.0001){
+        //     is_ig_found = true;
+        // }
         
-        if(fout)
-            fout << dpos_error_dt << std::endl;
+        // if(fout)
+        //     fout << dpos_error_dt << std::endl;
           
     }
 
@@ -71,7 +77,6 @@ void InverseKinematic::computeInitialGuess(){
 }
 
 void InverseKinematic::computeSolution(){
-    std::cout << "q_k in compute solution --> " << q_k_ << std::endl;
     for(int i=0; i<DOFS; i++){
         q_k_[i] = std::atan2(sin(q_k_[i]),cos(q_k_[i]));
         if(q_k_[i]<0) q_k_[i] += 2*M_PI;
@@ -79,11 +84,9 @@ void InverseKinematic::computeSolution(){
     Eigen::MatrixXd jacobian;
     kinematic_model_.setQ(q_k_);
     jacobian = kinematic_model_.getJacobian();
-    Eigen::VectorXd q(DOFS);
-    q = q_k_;
 
     int first_link = 0;
-    int last_link = 6;
+    int last_link = 5;
 
     kinematic_model_.computeForwardKinematic(first_link, last_link);
     Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans();
@@ -104,51 +107,11 @@ void InverseKinematic::computeSolution(){
             fout << iteration << " " <<  pos_error.norm() << std::endl;
        
         iteration++;
-        
-        // if(fout)
-        //     fout << 0 << std::endl;
+
           
     }
+
 }
-
-// void InverseKinematic::solveIk(Eigen::VectorXd &solution){
-
-//     Eigen::MatrixXd jacobian;
-//     kinematic_model_.setQ(q_k_);
-//     kinematic_model_.computeJacobian();
-//     jacobian = kinematic_model_.getJacobian();
-
-//     int first_link = 0;
-//     int last_link = 6;
-
-//     kinematic_model_.computeForwardKinematic(first_link, last_link);
-//     Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans();
-
-//     std::ofstream fout;
-//     fout.open("ik_solution.dat");
-//     int iteration = 0;
-//     if(fout)
-//             fout << "#iteration position_error_norm" << std::endl;
-//     while(pos_error.norm()>EPSILON_ERROR && iteration < 200){
-       
-//         Eigen::MatrixXd analitic_jacobian = jacobian.block(0,0,3,DOFS);
-//         //Eigen::MatrixXd pinv_jacobian = analitic_jacobian.completeOrthogonalDecomposition().pseudoInverse();
-//         Eigen::MatrixXd pinv_jacobian = analitic_jacobian.transpose();
-//         q_k_plus_one_ = q_k_ + 0.2*pinv_jacobian*pos_error;
-//         kinematic_model_.setQ(q_k_plus_one_);
-//         kinematic_model_.computeForwardKinematic(first_link, last_link);
-//         pos_error = desired_pos_ - kinematic_model_.getTrans();
-//         q_k_ = q_k_plus_one_;
-        
-//         if(fout)
-//             fout << iteration << " " <<  pos_error.norm() << std::endl;
-
-//         iteration++;
-//     }
-//     fout.close();
-//     solution = q_k_;
-
-// }
 
 void InverseKinematic::initVariables(){
 

@@ -23,7 +23,7 @@ class InverseKinematic{
     private:
 
         const int DOFS = 6;
-        const double EPSILON_ERROR = 0.001;
+        const double EPSILON_ERROR = 0.0001;
 
         Eigen::Vector3d desired_pos_;
 
