@@ -25,7 +25,6 @@ void KinematicModel::initVariables(){
     alpha_.resize(dofs_);
 
     q_.setZero();
-    cartesina_pos_.setZero();
     jacobian_.setZero();
 
     for(int i=0; i<dofs_; i++){

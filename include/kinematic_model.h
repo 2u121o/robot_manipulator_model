@@ -10,11 +10,37 @@
 #include "link.h"
 #include "utils.h"
 
+/**
+ * @brief Kinematic model of the robot.
+ * 
+ * This class porvides functionalities to comupte the geometric Jacobian between two 
+ * arbitrary frames and also the forward kinematic. 
+ * 
+ */
 class KinematicModel{
 
     public:
+
+
+        /**
+         * @brief Construct a new Kinematic Model object
+         * 
+         */
         KinematicModel();
+
+        /**
+         * @brief Construct a new Kinematic Model object with the information of 
+         * robot contained in the Robot class
+         * 
+         * @param robot contains the kinematics and dynamics parameters of the 
+         * robot
+         */
         KinematicModel(Robot robot);
+
+        /**
+         * @brief Destroy the Kinematic Model object
+         * 
+         */
         ~KinematicModel();
 
         /** @brief Compute the forward kinematics between two specified links 
@@ -68,25 +94,76 @@ class KinematicModel{
 
     private:
 
+        /**
+         * @brief Robots degree of freedom 
+         * 
+         */
         int dofs_; 
 
+        /**
+         * @brief Contains the kinematic and dynamic parameters of the robot
+         * 
+         */
         Robot robot_;
 
+        /**
+         * @brief Joint position in radiants 
+         * 
+         */
         Eigen::VectorXd q_;
-        Eigen::Vector3d cartesina_pos_;
+
+        /**
+         * @brief Three dimensional vector that represnts the translation between
+         * the origin of two reference frames
+         * 
+         */
         Eigen::Vector3d trans_;
 
-        Eigen::MatrixXd jacobian_;
+        /**
+         * @brief Orthonormal matrix that represents the rotation between two reference
+         * frames
+         * 
+         */
         Eigen::Matrix3d R_;
 
+        /**
+         * @brief Geometric jacobian between two referene frame. The dimension of the matrix
+         * is 6Xdofs_
+         * 
+         */
+        Eigen::MatrixXd jacobian_;
 
-        //parameters of the DH table
-
+        /**
+         * @brief Angle between the x axis of two reference frames about the z axis of the first reference frame.
+         * The angle is positive when the rotation is made conunter-clockwise.
+         * 
+         */
         Eigen::VectorXd theta_;
-        Eigen::VectorXd d_;
-        Eigen::VectorXd a_;
-        Eigen::VectorXd alpha_;
 
+        /**
+         * @brief Coordinate of two reference frame along the z axis of the previous reference frame
+         * 
+         */
+        Eigen::VectorXd d_;
+
+        /**
+         * @brief Distance between the origin of two reference frame.
+         * 
+         */
+        Eigen::VectorXd a_;
+
+        /**
+         * @brief Angle between the z axes of two reference frame about the x axis of the sencond 
+         * reference frame. The angle is positive when the rotation is made conunter-clockwise.
+         * 
+         */
+        Eigen::VectorXd alpha_;
+        
+        /**
+         * @brief Resize all the necessary variable and initialize the kinematic  parameters with 
+         * the information provided by the Robot object.
+         * 
+         */
         void initVariables();
         
 

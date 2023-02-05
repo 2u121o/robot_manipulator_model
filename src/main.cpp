@@ -17,8 +17,6 @@ int main(int argc, char *argv[])
     //otherwise it returns always the same number
     srand((unsigned int) time(0));
 
-
-
     Eigen::VectorXd q_test;
     Eigen::VectorXd dq;
     Eigen::VectorXd ddq;
