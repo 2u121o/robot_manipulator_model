@@ -3,6 +3,10 @@
 
 #include "kinematic_model.h"
 
+#include <fstream>
+#include <Eigen/Dense>
+#include <cmath>
+
 class InverseKinematic{
 
     public:
@@ -19,16 +23,23 @@ class InverseKinematic{
     private:
 
         const int DOFS = 6;
-        const double EPSILON_ERROR = 0.001;
+        const double EPSILON_ERROR = 0.0001;
 
         Eigen::Vector3d desired_pos_;
 
         Eigen::VectorXd q_k_plus_one_;
         Eigen::VectorXd q_k_;
 
+        int iteration = 0;
+
         KinematicModel kinematic_model_;
 
+        std::ofstream fout;
+
         void initVariables();
+
+        void computeInitialGuess();
+        void computeSolution();
 
 };
 

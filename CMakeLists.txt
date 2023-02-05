@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(robot_maipulator_model)
+set(library_name robot_model)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -30,6 +31,16 @@ include_directories( ${EIGEN3_INCLUDE_DIR} )
 
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+add_library(${library_name} SHARED ${SOURCES} ${HEADERS})
 
+#target_link_libraries(${library_name})
 
-target_link_libraries(${PROJECT_NAME})
+install(TARGETS ${library_name}
+    LIBRARY DESTINATION /usr/local/lib
+    ARCHIVE DESTINATION /usr/local/lib
+)
+
+install(DIRECTORY include
+    DESTINATION /usr/local
+    FILES_MATCHING PATTERN "*.h"
+)

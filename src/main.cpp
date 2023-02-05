@@ -3,9 +3,11 @@
 #include "kinematic_model.h"
 #include "inverse_kinematic.h"
 
+
 #include <Eigen/Dense>
 
 #include <chrono>
+
 
 int main(int argc, char *argv[])
 {
@@ -16,36 +18,47 @@ int main(int argc, char *argv[])
 
 
 
-    Eigen::VectorXd q;
+    Eigen::VectorXd q_test;
     Eigen::VectorXd dq;
     Eigen::VectorXd ddq;
 
-    q.resize(DOFS);
+    q_test.resize(DOFS);
     dq.resize(DOFS);
     ddq.resize(DOFS);
 
-    q <<  0.32, 0.5, 0.5, 0.3, 0.2, 0.3;
+    int first_link = 0;
+    int last_link = 5;
 
-    KinematicModel kinematic_model;
-    kinematic_model.setQ(q);
-    kinematic_model.computeJacobian();
+    q_test <<  3.49677, 4.33261, 1.39203, 5.98386, 2.38322, 6.28319;
+    //q_test.setZero();
+    //q_test <<  0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+
+    KinematicModel km;
+    km.setQ(q_test);
+    km.computeJacobian();
     std::cout << "------------------------------------------------" << std::endl;
     std::cout << "--------------------Jacobian--------------------" << std::endl;
     std::cout << "------------------------------------------------" << std::endl;
-    std::cout  << kinematic_model.getJacobian() << std::endl;
-    std::cout << "fk --> " << kinematic_model.getTrans() << std::endl;
+    std::cout  << km.getJacobian() << std::endl;
+    std::cout << "fk --> " << km.getTrans() << std::endl;
 
     InverseKinematic ik;
     Eigen::Vector3d desired_pos; 
-    desired_pos << -0.28548,-0.0491852,1.32735;
+    desired_pos << -0.81725,-0.10915,-0.005491;
     Eigen::VectorXd solution;
+    solution.resize(DOFS);
     ik.setDesiredPos(desired_pos);
-    ik.setQk(q);
+    ik.setQk(q_test);
     ik.solveIk(solution);
     std::cout << "---------------------------------------------------" << std::endl;
     std::cout << "--------------------ik solution--------------------" << std::endl;
     std::cout << "---------------------------------------------------" << std::endl;
     std::cout << solution << std::endl;
+    km.setQ(solution);
+    km.computeForwardKinematic(first_link, last_link);
+    std::cout << "fk --> " << km.getTrans() << std::endl;
+    std::cout << "Final cartisian error norm --> " << (desired_pos-km.getTrans()).norm() << std::endl;
+
 
 
 
@@ -57,7 +70,7 @@ int main(int argc, char *argv[])
     dq.setZero();
     ddq.setZero();
     auto start_g = std::chrono::high_resolution_clock::now();
-    g = model_g.rnea(q, dq, ddq, gravity_g);
+    g = model_g.rnea(q_test, dq, ddq, gravity_g);
     auto end_g = std::chrono::high_resolution_clock::now();
     auto duration_g = std::chrono::duration_cast<std::chrono::microseconds>(end_g-start_g);
 
@@ -77,7 +90,7 @@ int main(int argc, char *argv[])
     for(short int i=0; i<DOFS; i++){
         ddq.setZero();
         ddq[i] = 1;
-        M_i = model_M.rnea( q, dq, ddq, gravity);
+        M_i = model_M.rnea( q_test, dq, ddq, gravity);
         for(short int j=0; j<DOFS; j++){
             M(j,i) = M_i[j];
         }

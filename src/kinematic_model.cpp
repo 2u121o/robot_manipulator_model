@@ -3,7 +3,7 @@
 KinematicModel::KinematicModel(){
 
     initVariables();
-    
+    std::cout << "Kinematic model constructed! " << std::endl;
 }
 
 void KinematicModel::initVariables(){
@@ -18,26 +18,34 @@ void KinematicModel::initVariables(){
     cartesina_pos_.setZero();
     jacobian_.setZero();
 
-    alpha_ << M_PI/2, M_PI, M_PI/2, -M_PI/2, M_PI/2, 0.0;
-    a_ << 0.0, 0.38, 0.0, 0.0, 0.0, 0.0;
-    d_ << 0.22, 0.0, 0.0, 0.42, 0.0, 0.157;
+    // alpha_ << M_PI/2, M_PI, M_PI/2, -M_PI/2, M_PI/2, 0.0;
+    // a_ << 0.0, 0.38, 0.0, 0.0, 0.0, 0.0;
+    // d_ << 0.22, 0.0, 0.0, 0.42, 0.0, 0.157;
+
+    //UR5 from https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/
+    //change also in computeForwardKinematic() if change robot
+    alpha_ << M_PI/2, 0, 0, M_PI/2, -M_PI/2, 0.0;
+    a_ << 0.0, -0.425, -0.39225, 0.0, 0.0, 0.0;
+    d_ << 0.089159, 0.0, 0.0, 0.10915, 0.09465, 0.0823;
 }
 
 void KinematicModel::computeForwardKinematic(int idx_first_link, int idx_last_link){
-
+ 
     R_.setIdentity();
-    trans_ << 0,0,0;
+    trans_.setZero();
 
     Eigen::Matrix3d R; 
+    R.setZero();
     Eigen::Vector3d trans;
+    trans.setZero();
 
     double theta;
 
     for(int i=idx_first_link; i<idx_last_link; i++){
 
-         if(i==1 || i==2)
-            theta = q_[i]+M_PI/2;
-        else
+        //  if(i==1 || i==2)
+        //     theta = q_[i]+M_PI/2;
+        // else
             theta = q_[i];
 
         R << cos(theta), -sin(theta)*cos(alpha_[i]), sin(theta)*sin(alpha_[i]),
