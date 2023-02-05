@@ -4,8 +4,10 @@
 #include "kinematic_model.h"
 
 #include <fstream>
-#include <Eigen/Dense>
 #include <cmath>
+#include <vector>
+
+#include <Eigen/Dense>
 
 class InverseKinematic{
 

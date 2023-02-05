@@ -1,6 +1,6 @@
 #include "dynamical_model.h"
 
-DynamicalModel::DynamicalModel(){
+DynamicalModel::DynamicalModel(Robot robot):robot_(robot){
 
     //##########Dynamic Parameters #########//
     //masses
@@ -85,7 +85,8 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
     for(short int i=0; i<DOFS; i++){
 
         kinematic_model_.setQ(q);
-        kinematic_model_.computeForwardKinematic(i,i+1);
+        std::vector<int> link_origins = {i,i+1};
+        kinematic_model_.computeForwardKinematic(link_origins);
         R = kinematic_model_.getR();
         t = kinematic_model_.getTrans();
 
@@ -124,7 +125,8 @@ void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q){
     for(short int i=DOFS-1; i>=0; i--){
 
         kinematic_model_.setQ(q);
-        kinematic_model_.computeForwardKinematic(i,i+1);
+        std::vector<int> link_origins = {i,i+1};
+        kinematic_model_.computeForwardKinematic(link_origins);
         R = kinematic_model_.getR();
         t = kinematic_model_.getTrans();
 
@@ -156,5 +158,7 @@ void DynamicalModel::initializeMatrices(const Eigen::Vector3d gravity){
     u_.setZero();
     
 }
+
+DynamicalModel::~DynamicalModel(){}
 
 

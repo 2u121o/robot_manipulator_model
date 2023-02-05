@@ -8,11 +8,13 @@
 #include <Eigen/Dense>
 
 #include "kinematic_model.h"
+#include "robot.h"
 
 class DynamicalModel{
 
 public:
-    DynamicalModel();
+    DynamicalModel(Robot robot);
+    ~DynamicalModel();
 
     Eigen::VectorXd rnea(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq, const Eigen::Vector3d gravity);
 
@@ -21,6 +23,7 @@ private:
     Eigen::VectorXd m_;
 
     KinematicModel kinematic_model_;
+    Robot robot_;
 
     std::vector<Eigen::Matrix3d> inertia_; //3X3N tensor contains inertia matrix for each link
     std::vector<Eigen::Vector3d> cog_;     //3XN matrix contains cog vector for each link

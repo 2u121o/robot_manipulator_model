@@ -1,12 +1,13 @@
 
-#include "dynamical_model.h"
-#include "kinematic_model.h"
-#include "inverse_kinematic.h"
-
+#include <vector>
+#include <chrono>
 
 #include <Eigen/Dense>
 
-#include <chrono>
+#include "dynamical_model.h"
+#include "kinematic_model.h"
+#include "inverse_kinematic.h"
+#include "robot.h"
 
 
 int main(int argc, char *argv[])
@@ -33,15 +34,21 @@ int main(int argc, char *argv[])
     //q_test.setZero();
     //q_test <<  0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
-    KinematicModel km;
+    std::string param_file = "../robots/robot_parameters.json";
+    Robot robot;
+    robot.buildRobotFromFile(param_file);
+
+    KinematicModel km(robot);
     km.setQ(q_test);
     km.computeJacobian();
     std::cout << "------------------------------------------------" << std::endl;
     std::cout << "--------------------Jacobian--------------------" << std::endl;
     std::cout << "------------------------------------------------" << std::endl;
-    std::cout  << km.getJacobian() << std::endl;
+    Eigen::MatrixXd jacobian;
+    km.getJacobian(jacobian);
+    std::cout  << jacobian << std::endl;
     std::cout << "fk --> " << km.getTrans() << std::endl;
-
+/*
     InverseKinematic ik;
     Eigen::Vector3d desired_pos; 
     desired_pos << -0.81725,-0.10915,-0.005491;
@@ -55,7 +62,8 @@ int main(int argc, char *argv[])
     std::cout << "---------------------------------------------------" << std::endl;
     std::cout << solution << std::endl;
     km.setQ(solution);
-    km.computeForwardKinematic(first_link, last_link);
+    std::vector<int> link_origins = {first_link,last_link};
+    km.computeForwardKinematic(link_origins);
     std::cout << "fk --> " << km.getTrans() << std::endl;
     std::cout << "Final cartisian error norm --> " << (desired_pos-km.getTrans()).norm() << std::endl;
 
@@ -107,7 +115,7 @@ int main(int argc, char *argv[])
     std::cout << "--------------------M matrix--------------------" << std::endl;
     std::cout << M << std::endl;
     std::cout << "Compute in " << duration_m.count() << std::endl;
-
+*/
     return 0;
 
 }
