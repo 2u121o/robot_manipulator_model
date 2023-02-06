@@ -21,7 +21,7 @@ class Link{
 
         int getLinkNumber();
         void getDHParams(DHParams &dh_params);
-        void getDynamicParameters(DynamicParameters dynamic_parameters);
+        void getDynamicParameters(DynamicParameters &dynamic_parameters);
  
     private:
 

@@ -1,19 +1,20 @@
 #ifndef INVERSE_KINEMATIC_H
 #define INVERSE_KINEMATIC_H
 
-#include "kinematic_model.h"
-
 #include <fstream>
 #include <cmath>
 #include <vector>
 
 #include <Eigen/Dense>
 
+#include "kinematic_model.h"
+#include "robot.h"
+
 class InverseKinematic{
 
     public:
 
-        InverseKinematic();
+        InverseKinematic(Robot robot);
 
         void solveIk(Eigen::VectorXd &solution);
 
@@ -23,8 +24,13 @@ class InverseKinematic{
         void setQk(Eigen::VectorXd &q_k);
 
     private:
+    
+        Robot robot_;
 
-        const int DOFS = 6;
+        int dofs_;
+
+        const int MAX_ITER_INITIAL_GUESS = 5;
+        const int MAX_ITER_INITIAL_SOL = 1000;
         const double EPSILON_ERROR = 0.0001;
 
         Eigen::Vector3d desired_pos_;

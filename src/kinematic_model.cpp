@@ -61,22 +61,23 @@ void KinematicModel::computeForwardKinematic(const std::vector<int> idx_links){
     //double theta;
 
     for(int i=idx_links.at(0); i<idx_links.at(1); i++){
-
+        
         double theta = theta_(i);
         double alpha = alpha_(i);
         double a = a_(i);
         double d = d_(i);
-
+        
         theta += q_[i];
-
+        
         R << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha),
             sin(theta), cos(theta)*cos(alpha) , -cos(theta)*sin(alpha),
             0           , sin(alpha)              , cos(alpha);
-
+        
         trans << a*cos(theta), a*sin(theta), d;
-
+        
         trans_ = R_*trans + trans_;
         R_ = R_*R;
+        
     }
 
 }

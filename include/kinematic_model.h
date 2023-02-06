@@ -11,11 +11,18 @@
 #include "utils.h"
 
 /**
- * @brief Kinematic model of the robot.
- * 
+ * @class KinematicModel
+ * @brief  Kinematic model of the robot.
+ *
  * This class porvides functionalities to comupte the geometric Jacobian between two 
  * arbitrary frames and also the forward kinematic. 
- * 
+ *
+ * @startuml
+ * class KinematicModel {
+ * +dofs_: int
+ * +cognome: string
+ *}
+ * @enddot
  */
 class KinematicModel{
 
@@ -94,69 +101,37 @@ class KinematicModel{
 
     private:
 
-        /**
-         * @brief Robots degree of freedom 
-         * 
-         */
+    
+        //! @brief Robots degree of freedom 
         int dofs_; 
 
-        /**
-         * @brief Contains the kinematic and dynamic parameters of the robot
-         * 
-         */
+        //! @brief Contains the kinematic and dynamic parameters of the robot
         Robot robot_;
 
-        /**
-         * @brief Joint position in radiants 
-         * 
-         */
+        //! @brief Joint position in radiants 
         Eigen::VectorXd q_;
 
-        /**
-         * @brief Three dimensional vector that represnts the translation between
-         * the origin of two reference frames
-         * 
-         */
+        //! @brief Three dimensional vector that represnts the translation between the origin of two reference frames
         Eigen::Vector3d trans_;
 
-        /**
-         * @brief Orthonormal matrix that represents the rotation between two reference
-         * frames
-         * 
-         */
+        //! @brief Orthonormal matrix that represents the rotation between two reference frames
         Eigen::Matrix3d R_;
 
-        /**
-         * @brief Geometric jacobian between two referene frame. The dimension of the matrix
-         * is 6Xdofs_
-         * 
-         */
+        //! @brief Geometric jacobian between two referene frame. The dimension of the matrix is 6 X dofs_
         Eigen::MatrixXd jacobian_;
 
-        /**
-         * @brief Angle between the x axis of two reference frames about the z axis of the first reference frame.
-         * The angle is positive when the rotation is made conunter-clockwise.
-         * 
-         */
+        //! @brief Angle between the x axis of two reference frames about the z axis of the first reference frame.
+        //! The angle is positive when the rotation is made conunter-clockwise.
         Eigen::VectorXd theta_;
 
-        /**
-         * @brief Coordinate of two reference frame along the z axis of the previous reference frame
-         * 
-         */
+        //! @brief Coordinate of two reference frame along the z axis of the previous reference frame
         Eigen::VectorXd d_;
 
-        /**
-         * @brief Distance between the origin of two reference frame.
-         * 
-         */
+        //! @brief Distance between the origin of two reference frame.
         Eigen::VectorXd a_;
 
-        /**
-         * @brief Angle between the z axes of two reference frame about the x axis of the sencond 
-         * reference frame. The angle is positive when the rotation is made conunter-clockwise.
-         * 
-         */
+        //! @brief Angle between the z axes of two reference frame about the x axis of the sencond 
+        //! reference frame. The angle is positive when the rotation is made conunter-clockwise.
         Eigen::VectorXd alpha_;
         
         /**

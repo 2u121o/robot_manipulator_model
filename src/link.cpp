@@ -32,7 +32,7 @@ void Link::getDHParams(DHParams &dh_params){
     dh_params = dh_params_;
 }
 
-void Link::getDynamicParameters(DynamicParameters dynamic_parameters){
+void Link::getDynamicParameters(DynamicParameters &dynamic_parameters){
     dynamic_parameters = dynamic_parameters_;
 }
 

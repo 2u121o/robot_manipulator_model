@@ -52,11 +52,12 @@ void Robot::buildRobotFromFile(std::string file_name){
         inertia.resize(NUM_INERTIA_PARAMS);
         Json::Value inertia_value = dynamic_parameters_value["inertia"];
         inertia(0) = inertia_value["Ixx"].asDouble();
-        inertia(1) = inertia_value["Iyy"].asDouble();
-        inertia(2) = inertia_value["Izz"].asDouble();
-        inertia(3) = inertia_value["Ixy"].asDouble();
-        inertia(4) = inertia_value["Ixz"].asDouble();
-        inertia(5) = inertia_value["Ixz"].asDouble();
+        inertia(1) = inertia_value["Ixy"].asDouble();
+        inertia(2) = inertia_value["Ixz"].asDouble();
+        inertia(3) = inertia_value["Iyy"].asDouble();
+        inertia(4) = inertia_value["Iyz"].asDouble();
+        inertia(5) = inertia_value["Izz"].asDouble();
+        dynamic_parameters.inertia = inertia;
 
         Link link(link_number, dh_params, dynamic_parameters);
         links_.at(link_number) = link;

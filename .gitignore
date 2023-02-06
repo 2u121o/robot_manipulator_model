@@ -33,6 +33,8 @@
 
 # Others
 *.html
+*.pu
+*.user
 
 # Folders
 build
