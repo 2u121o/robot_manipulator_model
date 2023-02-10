@@ -1,25 +1,26 @@
 #include "inverse_kinematic.h"
 
-InverseKinematic::InverseKinematic(){
+InverseKinematic::InverseKinematic(Robot robot):robot_(robot){
     initVariables();
 }
 
 void InverseKinematic::solveIk(Eigen::VectorXd &solution){
 
-    
+    kinematic_model_ = KinematicModel(robot_);
     kinematic_model_.setQ(q_k_);
     kinematic_model_.computeJacobian();
         
     fout.open("ik_solution.dat");
     if(fout) fout << "#iteration position_error_norm" << std::endl;
-    computeInitialGuess();
+    //computeInitialGuess();
     computeSolution();
     
     solution = q_k_;
     int first_link = 0;
-    int last_link = 5;
+    int last_link = dofs_-1;
     kinematic_model_.setQ(solution);
-    kinematic_model_.computeForwardKinematic(first_link, last_link);
+    std::vector<int> link_origins = {first_link, last_link};
+    kinematic_model_.computeForwardKinematic(link_origins);
     //kinematic_model_.computeJacobian();
    // kinematic_model_.getJacobian();
     std::cout << "trans in solveIk --> " << kinematic_model_.getTrans() << std::endl;
@@ -29,14 +30,14 @@ void InverseKinematic::solveIk(Eigen::VectorXd &solution){
 void InverseKinematic::computeInitialGuess(){
 
     Eigen::MatrixXd jacobian;
-    jacobian = kinematic_model_.getJacobian();
-    Eigen::VectorXd q(DOFS);
+    kinematic_model_.getJacobian(jacobian);
+    Eigen::VectorXd q(dofs_);
     q = q_k_;
 
     int first_link = 0;
-    int last_link = 5;
-
-    kinematic_model_.computeForwardKinematic(first_link, last_link);
+    int last_link = dofs_-1;
+    std::vector<int> link_origins = {first_link, last_link};
+    kinematic_model_.computeForwardKinematic(link_origins);
     Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans();
 
     double dpos_error_dt = 0;
@@ -44,16 +45,16 @@ void InverseKinematic::computeInitialGuess(){
 
     bool is_ig_found = false;
 
-    while(pos_error.norm()>EPSILON_ERROR && iteration < 5 && !is_ig_found){
+    while(pos_error.norm()>EPSILON_ERROR && iteration < MAX_ITER_INITIAL_GUESS && !is_ig_found){
 
-        Eigen::MatrixXd analitic_jacobian = jacobian.block(0,0,3,DOFS);
+        Eigen::MatrixXd analitic_jacobian = jacobian.block(0,0,3,dofs_);
         Eigen::VectorXd dq = 0.8*analitic_jacobian.transpose()*pos_error;
         q += 0.1*dq;
         q_k_ = q_k_ + q;
         kinematic_model_.setQ(q);
-        kinematic_model_.computeForwardKinematic(first_link, last_link);
+        kinematic_model_.computeForwardKinematic(link_origins);
         kinematic_model_.computeJacobian();
-        jacobian = kinematic_model_.getJacobian();
+        kinematic_model_.getJacobian(jacobian);
         pos_error = desired_pos_ - kinematic_model_.getTrans();
 
         if(fout)
@@ -77,30 +78,30 @@ void InverseKinematic::computeInitialGuess(){
 }
 
 void InverseKinematic::computeSolution(){
-    for(int i=0; i<DOFS; i++){
+    for(int i=0; i<dofs_; i++){
         q_k_[i] = std::atan2(sin(q_k_[i]),cos(q_k_[i]));
         if(q_k_[i]<0) q_k_[i] += 2*M_PI;
     }
     Eigen::MatrixXd jacobian;
     kinematic_model_.setQ(q_k_);
-    jacobian = kinematic_model_.getJacobian();
+    kinematic_model_.getJacobian(jacobian);
 
     int first_link = 0;
-    int last_link = 5;
-
-    kinematic_model_.computeForwardKinematic(first_link, last_link);
+    int last_link = dofs_-1;
+    std::vector<int> link_origins = {first_link, last_link};
+    kinematic_model_.computeForwardKinematic(link_origins);
     Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans();
 
-    while(pos_error.norm()>EPSILON_ERROR && iteration < 6500 ){
+    while(pos_error.norm()>EPSILON_ERROR && iteration < MAX_ITER_INITIAL_SOL ){
 
-        Eigen::MatrixXd analitic_jacobian = jacobian.block(0,0,3,DOFS);
+        Eigen::MatrixXd analitic_jacobian = jacobian.block(0,0,3,dofs_);
         Eigen::MatrixXd pinv_jacobian = analitic_jacobian.completeOrthogonalDecomposition().pseudoInverse();
         Eigen::VectorXd dq = pinv_jacobian*pos_error;
         q_k_ +=  0.5*dq;
         kinematic_model_.setQ(q_k_);
-        kinematic_model_.computeForwardKinematic(first_link, last_link);
+        kinematic_model_.computeForwardKinematic(link_origins);
         kinematic_model_.computeJacobian();
-        jacobian = kinematic_model_.getJacobian();
+        kinematic_model_.getJacobian(jacobian);
         pos_error = desired_pos_ - kinematic_model_.getTrans();
 
         if(fout)
@@ -115,8 +116,9 @@ void InverseKinematic::computeSolution(){
 
 void InverseKinematic::initVariables(){
 
-    q_k_plus_one_.resize(DOFS);
-    q_k_.resize(DOFS);
+    dofs_ = robot_.getDofs();
+    q_k_plus_one_.resize(dofs_);
+    q_k_.resize(dofs_);
 
     desired_pos_.setZero();
     q_k_plus_one_.setZero();
