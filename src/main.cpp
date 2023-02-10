@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
     int last_link = 5;
 
     //q_test <<  3.49677, 4.33261, 1.39203, 5.98386, 2.38322, 6.28319;
-    q_test.setZero();
-    //q_test <<  0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    //q_test.setZero();
+    q_test <<  0.0, 0.0, 0.2, 0.0, 0.0, 0.5;
 
     std::string param_file = "../robots/robot_parameters.json";
     Robot robot;

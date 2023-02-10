@@ -48,6 +48,7 @@ class InverseKinematic{
 
         void computeInitialGuess();
         void computeSolution();
+        void computeSolutionLM();
 
 };
 

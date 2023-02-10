@@ -13,7 +13,8 @@ void InverseKinematic::solveIk(Eigen::VectorXd &solution){
     fout.open("ik_solution.dat");
     if(fout) fout << "#iteration position_error_norm" << std::endl;
     //computeInitialGuess();
-    computeSolution();
+   // computeSolution();
+    computeSolutionLM();
     
     solution = q_k_;
     int first_link = 0;
@@ -113,6 +114,62 @@ void InverseKinematic::computeSolution(){
     }
 
 }
+
+void InverseKinematic::computeSolutionLM(){
+    
+    Eigen::MatrixXd jacobian;
+    kinematic_model_.setQ(q_k_);
+    kinematic_model_.getJacobian(jacobian);
+    
+    Eigen::MatrixXd We = Eigen::MatrixXd::Identity(3, 3);
+    Eigen::MatrixXd Wn = 0.5*Eigen::MatrixXd::Identity(dofs_, dofs_);
+
+    int first_link = 0;
+    int last_link = dofs_-1;
+    std::vector<int> link_origins = {first_link, last_link};
+    kinematic_model_.computeForwardKinematic(link_origins);
+    Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans();
+
+    double wk_prev = 1;
+    double wk = std::sqrt((jacobian*jacobian.transpose()).determinant());
+    double wn; 
+
+    std::cout << "jacobian*jacobian.transpose() --> " << jacobian*jacobian.transpose() << std::endl;
+
+    while(pos_error.norm()>EPSILON_ERROR && iteration < MAX_ITER_INITIAL_SOL ){   
+
+        std::cout << "wk/wk_prev --> " << wk/wk_prev << std::endl;
+
+        if(wk/wk_prev<1){
+            wn = 0.5*(1-wk/wk_prev);
+
+        }
+        else{
+            wn = 0;
+        }
+
+        Wn = wn*Eigen::MatrixXd::Identity(dofs_, dofs_);
+        jacobian = jacobian.block(0,0,3,dofs_);
+        Eigen::MatrixXd H = jacobian.transpose()*We*jacobian+Wn;
+        q_k_ += H.inverse()*jacobian.transpose()*We*pos_error;
+
+        kinematic_model_.setQ(q_k_);
+        kinematic_model_.getJacobian(jacobian);
+        kinematic_model_.computeForwardKinematic(link_origins);
+        pos_error = desired_pos_ - kinematic_model_.getTrans();
+
+        wk_prev = wk;
+
+        if(fout)
+            fout << iteration << " " <<  pos_error.norm() << std::endl;
+
+        iteration++;
+
+    }
+
+    
+}
+
 
 void InverseKinematic::initVariables(){
 
