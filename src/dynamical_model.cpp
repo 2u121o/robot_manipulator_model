@@ -6,17 +6,22 @@ DynamicalModel::DynamicalModel(Robot robot):robot_(robot){
     
     resizeVariables();
     initializeDynamicParameters();
+
+    kinematic_model_ = KinematicModel(robot_);
+
+    Eigen::Vector3d gravity;
+    gravity << 0,0,9.81;
+    initializeMatrices(gravity);
 }
 
 
 
-Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq, const Eigen::Vector3d gravity){
+Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq, const Eigen::Vector3d gravity)
+{    
 
-    initializeMatrices(gravity);
-
-    kinematic_model_ = KinematicModel(robot_);
     kinematic_model_.setQ(q);
 
+    //TODO: you can compute the forward kinematic just once in the forward recursion and reuse in the backward recursion
     forwardRecursion(q, dq, ddq);
     backwardRecursion(q);
 
@@ -33,13 +38,11 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
     Eigen::Matrix3d R_transpose;
     Eigen::Vector3d t;
   
-    for(short int i=0; i<dofs_; i++){
-
-        kinematic_model_.setQ(q);
-        std::vector<int> link_origins = {i,i+1};
-        kinematic_model_.computeForwardKinematic(link_origins);
-        R = kinematic_model_.getR();
-        t = kinematic_model_.getTrans();
+    for(short int i=0; i<dofs_; i++)
+    {
+        kinematic_model_.computeForwardKinematic(i,i+1);
+        R = kinematic_model_.getR(i,i+1);
+        t = kinematic_model_.getTrans(i,i+1);
 
         R_transpose = R.transpose();
 
@@ -75,11 +78,9 @@ void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q){
 
     for(short int i=dofs_-1; i>=0; i--){
 
-        kinematic_model_.setQ(q);
-        std::vector<int> link_origins = {i,i+1};
-        kinematic_model_.computeForwardKinematic(link_origins);
-        R = kinematic_model_.getR();
-        t = kinematic_model_.getTrans();
+        // kinematic_model_.computeForwardKinematic(i,i+1);
+        R = kinematic_model_.getR(i,i+1);
+        t = kinematic_model_.getTrans(i,i+1);
 
         R_transpose = R.transpose();
 
@@ -154,7 +155,5 @@ void DynamicalModel::initializeDynamicParameters(){
 
     }
 }
-
-DynamicalModel::~DynamicalModel(){}
 
 

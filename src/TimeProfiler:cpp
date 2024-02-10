@@ -1,0 +1,24 @@
+#include "TimeProfiler.hpp"
+
+namespace profiler
+{
+
+TimeProfiler::TimeProfiler(const std::string &function_name):
+FUNCTION_NAME{function_name},
+START{std::chrono::steady_clock::now()}
+{
+}
+
+void TimeProfiler::printCurrentTime()
+{
+    const std::chrono::steady_clock::time_point STOP = std::chrono::steady_clock::now();
+    auto duration = STOP - START;
+    auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    std::cout << duration_ms << " ms --> " << FUNCTION_NAME << std::endl; 
+}
+
+TimeProfiler::~TimeProfiler()
+{
+    printCurrentTime();
+}
+}//profiler

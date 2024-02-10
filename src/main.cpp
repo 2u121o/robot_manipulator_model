@@ -9,6 +9,8 @@
 #include "inverse_kinematic.h"
 #include "robot.h"
 
+#include "TimeProfiler.hpp"
+
 
 int main(int argc, char *argv[])
 {
@@ -45,7 +47,7 @@ int main(int argc, char *argv[])
     Eigen::MatrixXd jacobian;
     km.getJacobian(jacobian);
     std::cout  << jacobian << std::endl;
-    std::cout << "fk --> " << km.getTrans() << std::endl;
+    std::cout << "fk --> " << km.getTrans(first_link,last_link) << std::endl;
 
     InverseKinematic ik(robot);
     Eigen::Vector3d desired_pos; 
@@ -60,23 +62,33 @@ int main(int argc, char *argv[])
     std::cout << "---------------------------------------------------" << std::endl;
     std::cout << solution << std::endl;
     km.setQ(solution);
-    std::vector<int> link_origins = {first_link,last_link};
-    km.computeForwardKinematic(link_origins);
-    std::cout << "fk --> " << km.getTrans() << std::endl;
-    std::cout << "Final cartisian error norm --> " << (desired_pos-km.getTrans()).norm() << std::endl;
+    km.computeForwardKinematic(first_link,last_link);
+    std::cout << "fk --> " << km.getTrans(first_link,last_link) << std::endl;
+    std::cout << "Final cartisian error norm --> " << (desired_pos-km.getTrans(first_link,last_link)).norm() << std::endl;
 
+    int NUM_ITERATIONS = 10000;
 
+    auto duration_mean_g  = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::duration<double>(0.0));
     Eigen::VectorXd g;
     g.resize(DOFS);
     DynamicalModel model_g(robot);
-     Eigen::Vector3d gravity_g;
+    Eigen::Vector3d gravity_g;
     gravity_g << 0,0,9.81;
     dq.setZero();
     ddq.setZero();
-    auto start_g = std::chrono::high_resolution_clock::now();
-    g = model_g.rnea(q_test, dq, ddq, gravity_g);
-    auto end_g = std::chrono::high_resolution_clock::now();
-    auto duration_g = std::chrono::duration_cast<std::chrono::microseconds>(end_g-start_g);
+    for(int i=0; i<NUM_ITERATIONS; i++)
+    {
+        
+        auto start_g = std::chrono::high_resolution_clock::now();
+        g = model_g.rnea(q_test, dq, ddq, gravity_g);
+        auto end_g = std::chrono::high_resolution_clock::now();
+        auto duration_g = std::chrono::duration_cast<std::chrono::microseconds>(end_g-start_g);
+        duration_mean_g += duration_g;
+    }
+
+    double mean_computation_g = duration_mean_g.count()/static_cast<double>(NUM_ITERATIONS);
+
+    std::cout << "Mean computation gravity vector: " << mean_computation_g << " us" << std::endl;
 
     DynamicalModel model_M(robot);
     Eigen::MatrixXd M;
@@ -104,13 +116,13 @@ int main(int argc, char *argv[])
     auto duration_m = std::chrono::duration_cast<std::chrono::microseconds>(end_m-start_m);
 
 
-    std::cout << "--------------------g vector--------------------" << std::endl;
-    std::cout << g << std::endl;
-    std::cout << "Compute in " << duration_g.count() << std::endl;
+    // std::cout << "--------------------g vector--------------------" << std::endl;
+    // std::cout << g << std::endl;
+    // std::cout << "Compute in " << duration_g.count() << " us" <<  std::endl;
 
-    std::cout << "--------------------M matrix--------------------" << std::endl;
-    std::cout << M << std::endl;
-    std::cout << "Compute in " << duration_m.count() << std::endl;
+    // std::cout << "--------------------M matrix--------------------" << std::endl;
+    // std::cout << M << std::endl;
+    // std::cout << "Compute in " << duration_m.count() << " us" << std::endl;
 
     return 0;
 

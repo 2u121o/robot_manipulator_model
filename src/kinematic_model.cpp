@@ -41,6 +41,17 @@ void KinematicModel::initVariables(){
 
     }
 
+    R_ = Eigen::MatrixXd::Identity(3*dofs_,3*dofs_);
+    trans_ = Eigen::VectorXd::Zero(3*dofs_);
+
+    cos_theta = 0;
+    sin_theta = 0;
+    cos_alpha = 0;
+    sin_alpha = 0;
+
+    theta_prev_ = -1000;
+    alpha_prev_ = -1000;
+
     //UR5 from https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/
     //change also in computeForwardKinematic() if change robot
     // alpha_ << M_PI/2, 0, 0, M_PI/2, -M_PI/2, 0.0;
@@ -48,35 +59,41 @@ void KinematicModel::initVariables(){
     // d_ << 0.089159, 0.0, 0.0, 0.10915, 0.09465, 0.0823;
 }
 
-void KinematicModel::computeForwardKinematic(const std::vector<int> idx_links){
+void KinematicModel::computeForwardKinematic(const int start_link_idx, const int end_link_idx)
+{
  
-    R_.setIdentity();
-    trans_.setZero();
-
     Eigen::Matrix3d R; 
-    R.setZero();
     Eigen::Vector3d trans;
-    trans.setZero();
 
     //double theta;
+    // double cos_theta = cos(theta);
+    // double sin_theta = sin(theta);
+    
 
-    for(int i=idx_links.at(0); i<idx_links.at(1); i++){
-        
-        double theta = theta_(i);
-        double alpha = alpha_(i);
+    for(int i=start_link_idx; i<end_link_idx; ++i){
+        double theta = theta_(i) + q_(i);
         double a = a_(i);
         double d = d_(i);
+
+        if(theta != theta_prev_)
+        {
+            sincos(theta, &sin_theta, &cos_theta);
+            theta_prev_ = theta;
+        }
+        if(alpha_(i) != alpha_prev_)
+        {
+            sincos(alpha_(i), &sin_alpha, &cos_alpha);
+            alpha_prev_ = alpha_(i);
+        }
         
-        theta += q_[i];
+        R << cos_theta, -sin_theta*cos_alpha, sin_theta*sin_alpha,
+            sin_theta, cos_theta*cos_alpha , -cos_theta*sin_alpha,
+            0           , sin_alpha              , cos_alpha;
         
-        R << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha),
-            sin(theta), cos(theta)*cos(alpha) , -cos(theta)*sin(alpha),
-            0           , sin(alpha)              , cos(alpha);
-        
-        trans << a*cos(theta), a*sin(theta), d;
-        
-        trans_ = R_*trans + trans_;
-        R_ = R_*R;
+        trans << a*cos_theta, a*sin_theta, d;
+
+        trans_.segment(i*3,+3) += R_.block(i*3,i*3,3,3)*trans ;
+        R_.block(i*3,i*3,3,3) *= R;
         
     }
 
@@ -86,8 +103,7 @@ void KinematicModel::computeJacobian(){
 
     Eigen::Vector3d pos_ee_absolute;
     pos_ee_absolute.setZero();
-    std::vector<int> link_origins = {0,dofs_-1};
-    computeForwardKinematic(link_origins);
+    computeForwardKinematic(0,dofs_-1);
     pos_ee_absolute = trans_;
 
     Eigen::Vector3d pos_ee_relative;
@@ -100,8 +116,7 @@ void KinematicModel::computeJacobian(){
     z_i_minus_one_const << 0,0,1;
 
     for(int i=0; i<dofs_; i++){
-        std::vector<int> link_origins = {0,i};
-        computeForwardKinematic(link_origins); //lerrore e probabilmente qui verifica questa parte 
+        computeForwardKinematic(0,i); 
         z_i_minus_one = R_*z_i_minus_one_const;
         pos_ee_relative = pos_ee_absolute - trans_;
         jacobian_.block(0,i,3,1) = z_i_minus_one.cross(pos_ee_relative);
@@ -117,12 +132,12 @@ Eigen::VectorXd KinematicModel::getQ(){
     return q_;
 }
 
-Eigen::Vector3d KinematicModel::getTrans(){
-    return trans_;
+Eigen::Vector3d KinematicModel::getTrans(const int start_link_idx, const int end_link_idx){
+    return trans_.segment(start_link_idx*3,end_link_idx*3-start_link_idx*3+3);
 }
 
-Eigen::Matrix3d KinematicModel::getR(){
-    return R_;
+Eigen::Matrix3d KinematicModel::getR(const int start_link_idx, const int end_link_idx){
+    return R_.block(start_link_idx*3,start_link_idx*3,end_link_idx*3-start_link_idx*3+3,end_link_idx*3-start_link_idx*3+3);
 }
 
 void KinematicModel::getJacobian(Eigen::MatrixXd &jacobian){

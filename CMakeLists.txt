@@ -3,13 +3,13 @@ cmake_minimum_required(VERSION 3.5)
 project(robot_maipulator_model)
 set(library_name robot_model)
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_BUILD_TYPE Release)
+
+
+# set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 
 include_directories(include)
 include_directories(/usr/include/jsoncpp/)

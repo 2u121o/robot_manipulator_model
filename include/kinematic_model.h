@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include <Eigen/Dense>
 
@@ -56,7 +57,7 @@ class KinematicModel{
         *                   origins for which we want to compute the forward
         *                   kinematic
         */
-        void computeForwardKinematic(const std::vector<int> idx_links);
+        void computeForwardKinematic(const int start_link_idx, const int end_link_idx);
 
         /** @brief Compute the Jacobian at the endeffector starting from the 
         *         robot base
@@ -80,7 +81,7 @@ class KinematicModel{
         *  @return a three dimensional vector that represent the positoin
         *          of the endeffector in the base frame
         */
-        Eigen::Vector3d getTrans();
+        Eigen::Vector3d getTrans(const int start_link_idx, const int end_link_idx);
 
         /** @brief Get the orientation of the end effector w.r.t. the base frame
         *
@@ -89,7 +90,7 @@ class KinematicModel{
         *                describes the orientation of the endeffector with respect to the 
         *                base frame 
         */
-        Eigen::Matrix3d getR();
+        Eigen::Matrix3d getR(const int start_link_idx, const int end_link_idx);
 
         /** @brief Get the geometric Jacobian from the base frame to the endeffector
         *
@@ -100,7 +101,7 @@ class KinematicModel{
         void getJacobian(Eigen::MatrixXd &jacobian);
 
     private:
-
+    
     
         //! @brief Robots degree of freedom 
         int dofs_; 
@@ -112,10 +113,10 @@ class KinematicModel{
         Eigen::VectorXd q_;
 
         //! @brief Three dimensional vector that represnts the translation between the origin of two reference frames
-        Eigen::Vector3d trans_;
+        Eigen::VectorXd trans_;
 
         //! @brief Orthonormal matrix that represents the rotation between two reference frames
-        Eigen::Matrix3d R_;
+        Eigen::MatrixXd R_;
 
         //! @brief Geometric jacobian between two referene frame. The dimension of the matrix is 6 X dofs_
         Eigen::MatrixXd jacobian_;
@@ -133,6 +134,14 @@ class KinematicModel{
         //! @brief Angle between the z axes of two reference frame about the x axis of the sencond 
         //! reference frame. The angle is positive when the rotation is made conunter-clockwise.
         Eigen::VectorXd alpha_;
+
+        double cos_theta;
+        double sin_theta;
+        double cos_alpha;
+        double sin_alpha;
+
+        double theta_prev_;
+        double alpha_prev_;
         
         /**
          * @brief Resize all the necessary variable and initialize the kinematic  parameters with 
