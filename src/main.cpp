@@ -69,10 +69,14 @@ int main(int argc, char *argv[])
     Eigen::VectorXd g;
     g.resize(DOFS);
     DynamicalModel model_g(robot);
-     Eigen::Vector3d gravity_g;
+    Eigen::Vector3d gravity_g;
     gravity_g << 0,0,9.81;
     dq.setZero();
     ddq.setZero();
+    q_test.setZero();
+    q_test(1) = 1.0;
+    q_test(2) = 1.0;
+    q_test(3) = 1.0;
     auto start_g = std::chrono::high_resolution_clock::now();
     g = model_g.rnea(q_test, dq, ddq, gravity_g);
     auto end_g = std::chrono::high_resolution_clock::now();
@@ -111,6 +115,27 @@ int main(int argc, char *argv[])
     std::cout << "--------------------M matrix--------------------" << std::endl;
     std::cout << M << std::endl;
     std::cout << "Compute in " << duration_m.count() << std::endl;
+
+    // q_test.setZero();
+    // q_test(1) = 1.0;
+    // q_test(2) = 1.0;
+    // q_test(3) = 1.0;
+    --------------------g vector--------------------
+    // -4.66294e-15
+    //     -156.408
+    //     -50.976
+    //     -1.10659
+    //     -1.65226
+    // -0.223362
+    // Compute in 19
+    // --------------------M matrix--------------------
+    // 13.7933  -0.232461 -0.0234105  -0.192564   0.346809  0.0724387
+    // -0.232533    14.4179    5.65443   0.107887   0.237748  0.0338296
+    // -0.0234822    5.65443    3.69536  0.0677056   0.161394  0.0256859
+    // -0.192464   0.107715  0.0675336  0.0170558  0.0154857 0.00439645
+    // 0.346809   0.237748   0.161394  0.0154857  0.0809201  0.0185367
+    // 0.0724387  0.0338296  0.0256859 0.00439645  0.0185367  0.0044264
+    // Compute in 76
 
     return 0;
 

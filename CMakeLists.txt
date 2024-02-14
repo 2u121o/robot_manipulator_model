@@ -11,6 +11,11 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+option(ENABLE_TESTING "Enable google test" OFF)
+if(ENABLE_TESTING MATCHES ON)
+    add_subdirectory(test)
+endif()
+
 include_directories(include)
 include_directories(/usr/include/jsoncpp/)
 
