@@ -21,7 +21,6 @@ Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::Vect
 
     kinematic_model_.setQ(q);
 
-    //TODO: you can compute the forward kinematic just once in the forward recursion and reuse in the backward recursion
     forwardRecursion(q, dq, ddq);
     backwardRecursion(q);
 
@@ -45,11 +44,14 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
         t = kinematic_model_.getTrans(i,i+1);
 
         R_transpose = R.transpose();
-
-        omega_.at(i+1) = R_transpose*(omega_.at(i) + dq[i]*z);
-        d_omega_.at(i+1) = R_transpose*(d_omega_.at(i) + ddq[i]*z + dq[i]*(omega_.at(i).cross(z)));
-        a_.at(i+1) = R_transpose*a_.at(i) + d_omega_.at(i+1).cross(R_transpose*t) + omega_.at(i+1).cross(omega_.at(i+1).cross(R_transpose*t));    
-        ac_.at(i) = a_.at(i+1) + d_omega_.at(i+1).cross(cog_.at(i)) + omega_.at(i+1).cross(omega_.at(i+1).cross(cog_.at(i)));
+        
+        Eigen::Vector3d omega_i = omega_.at(i);
+        omega_.at(i+1) = R_transpose*(omega_i + dq(i)*z);
+        d_omega_.at(i+1) = R_transpose*(d_omega_.at(i) + ddq(i)*z + dq(i)*(omega_i.cross(z)));
+        Eigen::Vector3d omega_i_plus_one = omega_.at(i+1);
+        Eigen::Vector3d R_transpose_times_t = R_transpose*t;
+        a_.at(i+1) = R_transpose*a_.at(i) + d_omega_.at(i+1).cross(R_transpose_times_t) + omega_i_plus_one.cross(omega_i_plus_one.cross(R_transpose_times_t));    
+        ac_.at(i) = a_.at(i+1) + d_omega_.at(i+1).cross(cog_.at(i)) + omega_i_plus_one.cross(omega_i_plus_one.cross(cog_.at(i)));
 
     }
 

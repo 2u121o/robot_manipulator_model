@@ -77,12 +77,12 @@ void KinematicModel::computeForwardKinematic(const int start_link_idx, const int
 
         if(theta != theta_prev_)
         {
-            sincos(theta, &sin_theta, &cos_theta);
+            sincosf(static_cast<float>(theta), &sin_theta, &cos_theta);
             theta_prev_ = theta;
         }
         if(alpha_(i) != alpha_prev_)
         {
-            sincos(alpha_(i), &sin_alpha, &cos_alpha);
+            sincosf(static_cast<float>(alpha_(i)), &sin_alpha, &cos_alpha);
             alpha_prev_ = alpha_(i);
         }
         

@@ -135,13 +135,13 @@ class KinematicModel{
         //! reference frame. The angle is positive when the rotation is made conunter-clockwise.
         Eigen::VectorXd alpha_;
 
-        double cos_theta;
-        double sin_theta;
-        double cos_alpha;
-        double sin_alpha;
+        float cos_theta;
+        float sin_theta;
+        float cos_alpha;
+        float sin_alpha;
 
-        double theta_prev_;
-        double alpha_prev_;
+        float theta_prev_;
+        float alpha_prev_;
         
         /**
          * @brief Resize all the necessary variable and initialize the kinematic  parameters with 
