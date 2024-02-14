@@ -41,6 +41,9 @@ void KinematicModel::initVariables(){
 
     }
 
+    R_ = Eigen::MatrixXd::Identity(3*dofs_,3*dofs_);
+    trans_ = Eigen::VectorXd::Zero(3*dofs_);
+
     //UR5 from https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/
     //change also in computeForwardKinematic() if change robot
     // alpha_ << M_PI/2, 0, 0, M_PI/2, -M_PI/2, 0.0;
@@ -50,16 +53,10 @@ void KinematicModel::initVariables(){
 
 void KinematicModel::computeForwardKinematic(const int start_link_idx, const int end_link_idx){
  
-    R_.setIdentity();
-    trans_.setZero();
 
     Eigen::Matrix3d R; 
-    R.setZero();
     Eigen::Vector3d trans;
-    trans.setZero();
-
-    //double theta;
-
+   
     for(int i=start_link_idx; i<end_link_idx; ++i)
     { 
         double theta = theta_(i);
@@ -74,9 +71,9 @@ void KinematicModel::computeForwardKinematic(const int start_link_idx, const int
             0           , sin(alpha)              , cos(alpha);
         
         trans << a*cos(theta), a*sin(theta), d;
-        
-        trans_ = R_*trans + trans_;
-        R_ = R_*R;
+
+        trans_.segment(i*3,+3) += R_.block(i*3,i*3,3,3)*trans ;
+        R_.block(i*3,i*3,3,3) *= R;
         
     }
 
@@ -116,12 +113,13 @@ Eigen::VectorXd KinematicModel::getQ(){
     return q_;
 }
 
-Eigen::Vector3d KinematicModel::getTrans(){
-    return trans_;
+Eigen::Vector3d KinematicModel::getTrans(const int start_link_idx, const int end_link_idx){
+    return trans_.segment(start_link_idx*3,end_link_idx*3-start_link_idx*3);
 }
 
-Eigen::Matrix3d KinematicModel::getR(){
-    return R_;
+Eigen::Matrix3d KinematicModel::getR(const int start_link_idx, const int end_link_idx){
+    
+    return R_.block(start_link_idx*3,start_link_idx*3,end_link_idx*3-start_link_idx*3,end_link_idx*3-start_link_idx*3);
 }
 
 void KinematicModel::getJacobian(Eigen::MatrixXd &jacobian){

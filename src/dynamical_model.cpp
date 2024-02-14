@@ -37,8 +37,8 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
 
         kinematic_model_.setQ(q);
         kinematic_model_.computeForwardKinematic(i,i+1);
-        R = kinematic_model_.getR();
-        t = kinematic_model_.getTrans();
+        R = kinematic_model_.getR(i,i+1);
+        t = kinematic_model_.getTrans(i,i+1);
 
         R_transpose = R.transpose();
 
@@ -75,13 +75,12 @@ void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q){
     for(short int i=dofs_-1; i>=0; i--){
 
         kinematic_model_.setQ(q);
-        kinematic_model_.computeForwardKinematic(i,i+1);
-        R = kinematic_model_.getR();
-        t = kinematic_model_.getTrans();
+        R = kinematic_model_.getR(i,i+1);
+        t = kinematic_model_.getTrans(i,i+1);
 
         R_transpose = R.transpose();
 
-       f_.at(i) = Rp1*f_.at(i+1) + mass_[i]*(ac_.at(i));
+        f_.at(i) = Rp1*f_.at(i+1) + mass_[i]*(ac_.at(i));
        
         tau_.at(i) = Rp1*tau_.at(i+1) + (Rp1*f_.at(i+1)).cross(cog_.at(i)) - f_.at(i).cross(R_transpose*t + cog_.at(i)) +
                     inertia_.at(i)*(d_omega_.at(i+1)) + omega_.at(i+1).cross(inertia_.at(i) * (omega_.at(i+1)));

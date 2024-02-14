@@ -22,7 +22,7 @@ void InverseKinematic::solveIk(Eigen::VectorXd &solution){
     kinematic_model_.computeForwardKinematic(first_link, last_link);
     //kinematic_model_.computeJacobian();
    // kinematic_model_.getJacobian();
-    std::cout << "trans in solveIk --> " << kinematic_model_.getTrans() << std::endl;
+    std::cout << "trans in solveIk --> " << kinematic_model_.getTrans(first_link, last_link) << std::endl;
     fout.close();
 }
 
@@ -36,7 +36,7 @@ void InverseKinematic::computeInitialGuess(){
     int first_link = 0;
     int last_link = dofs_-1;
     kinematic_model_.computeForwardKinematic(first_link, last_link);
-    Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans();
+    Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans(first_link, last_link);
 
     double dpos_error_dt = 0;
     double pos_error_norm_prec = 0;
@@ -53,7 +53,7 @@ void InverseKinematic::computeInitialGuess(){
         kinematic_model_.computeForwardKinematic(first_link, last_link);
         kinematic_model_.computeJacobian();
         kinematic_model_.getJacobian(jacobian);
-        pos_error = desired_pos_ - kinematic_model_.getTrans();
+        pos_error = desired_pos_ - kinematic_model_.getTrans(first_link, last_link);
 
         if(fout)
             fout << iteration << " " <<  pos_error.norm() << std::endl;
@@ -87,7 +87,7 @@ void InverseKinematic::computeSolution(){
     int first_link = 0;
     int last_link = dofs_-1;
     kinematic_model_.computeForwardKinematic(first_link, last_link);
-    Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans();
+    Eigen::Vector3d pos_error = desired_pos_ - kinematic_model_.getTrans(first_link, last_link);
 
     while(pos_error.norm()>EPSILON_ERROR && iteration < MAX_ITER_INITIAL_SOL ){
 
@@ -99,7 +99,7 @@ void InverseKinematic::computeSolution(){
         kinematic_model_.computeForwardKinematic(first_link, last_link);
         kinematic_model_.computeJacobian();
         kinematic_model_.getJacobian(jacobian);
-        pos_error = desired_pos_ - kinematic_model_.getTrans();
+        pos_error = desired_pos_ - kinematic_model_.getTrans(first_link, last_link);
 
         if(fout)
             fout << iteration << " " <<  pos_error.norm() << std::endl;
