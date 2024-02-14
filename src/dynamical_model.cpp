@@ -6,6 +6,7 @@ DynamicalModel::DynamicalModel(Robot robot):robot_(robot){
     
     resizeVariables();
     initializeDynamicParameters();
+    kinematic_model_ = KinematicModel(robot_);
 }
 
 
@@ -14,7 +15,6 @@ Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::Vect
 
     initializeMatrices(gravity);
 
-    kinematic_model_ = KinematicModel(robot_);
     kinematic_model_.setQ(q);
 
     forwardRecursion(q, dq, ddq);
@@ -36,8 +36,7 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
     for(short int i=0; i<dofs_; i++){
 
         kinematic_model_.setQ(q);
-        std::vector<int> link_origins = {i,i+1};
-        kinematic_model_.computeForwardKinematic(link_origins);
+        kinematic_model_.computeForwardKinematic(i,i+1);
         R = kinematic_model_.getR();
         t = kinematic_model_.getTrans();
 
@@ -76,8 +75,7 @@ void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q){
     for(short int i=dofs_-1; i>=0; i--){
 
         kinematic_model_.setQ(q);
-        std::vector<int> link_origins = {i,i+1};
-        kinematic_model_.computeForwardKinematic(link_origins);
+        kinematic_model_.computeForwardKinematic(i,i+1);
         R = kinematic_model_.getR();
         t = kinematic_model_.getTrans();
 
@@ -104,7 +102,7 @@ void DynamicalModel::initializeMatrices(const Eigen::Vector3d gravity){
         tau_.at(i).setZero();
         if(i<dofs_) ac_.at(i).setZero();
     }
-    a_.at(0) = gravity;
+    a_.at(0) = -gravity;
 
     u_.setZero();
     

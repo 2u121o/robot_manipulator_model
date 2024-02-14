@@ -52,11 +52,9 @@ class KinematicModel{
 
         /** @brief Compute the forward kinematics between two specified links 
         *  
-        *  @param idx_links is the vector containing the indeces of the link
-        *                   origins for which we want to compute the forward
-        *                   kinematic
+        *  @param idx_links ...........
         */
-        void computeForwardKinematic(const std::vector<int> idx_links);
+        void computeForwardKinematic(const int start_link_idx, const int end_link_idx);
 
         /** @brief Compute the Jacobian at the endeffector starting from the 
         *         robot base

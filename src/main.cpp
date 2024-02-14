@@ -36,91 +36,120 @@ int main(int argc, char *argv[])
     Robot robot;
     robot.buildRobotFromFile(param_file);
 
-    KinematicModel km(robot);
-    km.setQ(q_test);
-    km.computeJacobian();
-    std::cout << "------------------------------------------------" << std::endl;
-    std::cout << "--------------------Jacobian--------------------" << std::endl;
-    std::cout << "------------------------------------------------" << std::endl;
-    Eigen::MatrixXd jacobian;
-    km.getJacobian(jacobian);
-    std::cout  << jacobian << std::endl;
-    std::cout << "fk --> " << km.getTrans() << std::endl;
-
-    InverseKinematic ik(robot);
-    Eigen::Vector3d desired_pos; 
-    desired_pos << -0.41725,-0.10915,-0.005491;
-    Eigen::VectorXd solution;
-    solution.resize(DOFS);
-    ik.setDesiredPos(desired_pos);
-    ik.setQk(q_test);
-    ik.solveIk(solution);
-    std::cout << "---------------------------------------------------" << std::endl;
-    std::cout << "--------------------ik solution--------------------" << std::endl;
-    std::cout << "---------------------------------------------------" << std::endl;
-    std::cout << solution << std::endl;
-    km.setQ(solution);
-    std::vector<int> link_origins = {first_link,last_link};
-    km.computeForwardKinematic(link_origins);
-    std::cout << "fk --> " << km.getTrans() << std::endl;
-    std::cout << "Final cartisian error norm --> " << (desired_pos-km.getTrans()).norm() << std::endl;
-
 
     Eigen::VectorXd g;
     g.resize(DOFS);
     DynamicalModel model_g(robot);
     Eigen::Vector3d gravity_g;
-    gravity_g << 0,0,9.81;
+    gravity_g << 0,0, -9.81;
     dq.setZero();
     ddq.setZero();
     q_test.setZero();
     q_test(1) = 1.0;
     q_test(2) = 1.0;
     q_test(3) = 1.0;
-    auto start_g = std::chrono::high_resolution_clock::now();
-    g = model_g.rnea(q_test, dq, ddq, gravity_g);
-    auto end_g = std::chrono::high_resolution_clock::now();
-    auto duration_g = std::chrono::duration_cast<std::chrono::microseconds>(end_g-start_g);
 
-    DynamicalModel model_M(robot);
-    Eigen::MatrixXd M;
-    M.resize(DOFS,DOFS);
-    M.setZero();
+    int NUM_ITERATIONS = 1000000;
+    auto duration_mean_g  = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::duration<double>(0.0));
+    double duration_max = 0.0;
 
-    Eigen::Vector3d gravity;
-    gravity << 0,0,0;
-
-    Eigen::VectorXd M_i;
-    M_i.resize(DOFS);
-    M_i.setZero();
-    dq.setZero();
-    auto start_m = std::chrono::high_resolution_clock::now();
-    for(short int i=0; i<DOFS; i++){
-        ddq.setZero();
-        ddq[i] = 1;
-        M_i = model_M.rnea( q_test, dq, ddq, gravity);
-        for(short int j=0; j<DOFS; j++){
-            M(j,i) = M_i[j];
+    for(int i=0; i<NUM_ITERATIONS; i++)
+    {
+        auto start_g = std::chrono::high_resolution_clock::now();
+        g = model_g.rnea(q_test, dq, ddq, gravity_g);
+        auto end_g = std::chrono::high_resolution_clock::now();
+        auto duration_g = std::chrono::duration_cast<std::chrono::microseconds>(end_g-start_g);
+        duration_mean_g += duration_g;
+        if(duration_max<duration_g.count())
+        {
+            duration_max = duration_g.count();
         }
-        M_i.setZero();
     }
-    auto end_m = std::chrono::high_resolution_clock::now();
-    auto duration_m = std::chrono::duration_cast<std::chrono::microseconds>(end_m-start_m);
-
+    double mean_computation_g = duration_mean_g.count()/static_cast<double>(NUM_ITERATIONS);
 
     std::cout << "--------------------g vector--------------------" << std::endl;
     std::cout << g << std::endl;
-    std::cout << "Compute in " << duration_g.count() << std::endl;
+    std::cout << "Compute in (mean) " << mean_computation_g << " us" << std::endl;
+    std::cout << "Max computation time " << duration_max << " us" << std::endl;
 
-    std::cout << "--------------------M matrix--------------------" << std::endl;
-    std::cout << M << std::endl;
-    std::cout << "Compute in " << duration_m.count() << std::endl;
+    //EXPECTED
+     // --------------------g vector--------------------
+    // -4.66294e-15
+    //     -156.408
+    //     -50.976
+    //     -1.10659
+    //     -1.65226
+    // -0.223362
+    // Compute in 19
+
+    // KinematicModel km(robot);
+    // km.setQ(q_test);
+    // km.computeJacobian();
+    // std::cout << "------------------------------------------------" << std::endl;
+    // std::cout << "--------------------Jacobian--------------------" << std::endl;
+    // std::cout << "------------------------------------------------" << std::endl;
+    // Eigen::MatrixXd jacobian;
+    // km.getJacobian(jacobian);
+    // std::cout  << jacobian << std::endl;
+    // std::cout << "fk --> " << km.getTrans() << std::endl;
+
+    // InverseKinematic ik(robot);
+    // Eigen::Vector3d desired_pos; 
+    // desired_pos << -0.41725,-0.10915,-0.005491;
+    // Eigen::VectorXd solution;
+    // solution.resize(DOFS);
+    // ik.setDesiredPos(desired_pos);
+    // ik.setQk(q_test);
+    // ik.solveIk(solution);
+    // std::cout << "---------------------------------------------------" << std::endl;
+    // std::cout << "--------------------ik solution--------------------" << std::endl;
+    // std::cout << "---------------------------------------------------" << std::endl;
+    // std::cout << solution << std::endl;
+    // km.setQ(solution);
+    // std::vector<int> link_origins = {first_link,last_link};
+    // km.computeForwardKinematic(link_origins);
+    // std::cout << "fk --> " << km.getTrans() << std::endl;
+    // std::cout << "Final cartisian error norm --> " << (desired_pos-km.getTrans()).norm() << std::endl;
+
+
+
+
+    // DynamicalModel model_M(robot);
+    // Eigen::MatrixXd M;
+    // M.resize(DOFS,DOFS);
+    // M.setZero();
+
+    // Eigen::Vector3d gravity;
+    // gravity << 0,0,0;
+
+    // Eigen::VectorXd M_i;
+    // M_i.resize(DOFS);
+    // M_i.setZero();
+    // dq.setZero();
+    // auto start_m = std::chrono::high_resolution_clock::now();
+    // for(short int i=0; i<DOFS; i++){
+    //     ddq.setZero();
+    //     ddq[i] = 1;
+    //     M_i = model_M.rnea( q_test, dq, ddq, gravity);
+    //     for(short int j=0; j<DOFS; j++){
+    //         M(j,i) = M_i[j];
+    //     }
+    //     M_i.setZero();
+    // }
+    // auto end_m = std::chrono::high_resolution_clock::now();
+    // auto duration_m = std::chrono::duration_cast<std::chrono::microseconds>(end_m-start_m);
+
+
+   
+    // std::cout << "--------------------M matrix--------------------" << std::endl;
+    // std::cout << M << std::endl;
+    // std::cout << "Compute in " << duration_m.count() << std::endl;
 
     // q_test.setZero();
     // q_test(1) = 1.0;
     // q_test(2) = 1.0;
     // q_test(3) = 1.0;
-    --------------------g vector--------------------
+    // --------------------g vector--------------------
     // -4.66294e-15
     //     -156.408
     //     -50.976

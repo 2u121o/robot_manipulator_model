@@ -48,7 +48,7 @@ void KinematicModel::initVariables(){
     // d_ << 0.089159, 0.0, 0.0, 0.10915, 0.09465, 0.0823;
 }
 
-void KinematicModel::computeForwardKinematic(const std::vector<int> idx_links){
+void KinematicModel::computeForwardKinematic(const int start_link_idx, const int end_link_idx){
  
     R_.setIdentity();
     trans_.setZero();
@@ -60,8 +60,8 @@ void KinematicModel::computeForwardKinematic(const std::vector<int> idx_links){
 
     //double theta;
 
-    for(int i=idx_links.at(0); i<idx_links.at(1); i++){
-        
+    for(int i=start_link_idx; i<end_link_idx; ++i)
+    { 
         double theta = theta_(i);
         double alpha = alpha_(i);
         double a = a_(i);
@@ -87,7 +87,7 @@ void KinematicModel::computeJacobian(){
     Eigen::Vector3d pos_ee_absolute;
     pos_ee_absolute.setZero();
     std::vector<int> link_origins = {0,dofs_-1};
-    computeForwardKinematic(link_origins);
+    computeForwardKinematic(0,dofs_-1);
     pos_ee_absolute = trans_;
 
     Eigen::Vector3d pos_ee_relative;
@@ -100,8 +100,7 @@ void KinematicModel::computeJacobian(){
     z_i_minus_one_const << 0,0,1;
 
     for(int i=0; i<dofs_; i++){
-        std::vector<int> link_origins = {0,i};
-        computeForwardKinematic(link_origins); //lerrore e probabilmente qui verifica questa parte 
+        computeForwardKinematic(0,i);
         z_i_minus_one = R_*z_i_minus_one_const;
         pos_ee_relative = pos_ee_absolute - trans_;
         jacobian_.block(0,i,3,1) = z_i_minus_one.cross(pos_ee_relative);
