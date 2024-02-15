@@ -56,6 +56,9 @@ void KinematicModel::computeForwardKinematic(const int start_link_idx, const int
 
     Eigen::Matrix3d R; 
     Eigen::Vector3d trans;
+
+    R_ = Eigen::MatrixXd::Identity(3*dofs_,3*dofs_);
+    trans_ = Eigen::VectorXd::Zero(3*dofs_);
    
     for(int i=start_link_idx; i<end_link_idx; ++i)
     { 

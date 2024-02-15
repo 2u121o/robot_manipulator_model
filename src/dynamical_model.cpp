@@ -16,6 +16,7 @@ Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::Vect
     initializeMatrices(gravity);
 
     kinematic_model_.setQ(q);
+    kinematic_model_.computeForwardKinematic(0,q.size());
 
     forwardRecursion(q, dq, ddq);
     backwardRecursion(q);
@@ -35,8 +36,6 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
   
     for(short int i=0; i<dofs_; i++){
 
-        kinematic_model_.setQ(q);
-        kinematic_model_.computeForwardKinematic(i,i+1);
         R = kinematic_model_.getR(i,i+1);
         t = kinematic_model_.getTrans(i,i+1);
 
