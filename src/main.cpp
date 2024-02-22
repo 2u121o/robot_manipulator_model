@@ -12,6 +12,15 @@
 
 int main(int argc, char *argv[])
 {
+    // TEST
+    // sudo perf stat  ./robot_maipulator_model
+    // sudo perf stat -B -e cache-references,cache-misses,cycles,instructions,branches,faults,migrations ./robot_maipulator_model
+
+    // sudo perf record -e cache-misses ./robot_maipulator_model
+    // sudo perf report -v
+
+    // valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all  ./robot_maipulator_model
+
 
     const int DOFS = 6;
     //otherwise it returns always the same number

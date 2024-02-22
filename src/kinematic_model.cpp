@@ -7,7 +7,7 @@ KinematicModel::KinematicModel(){
 KinematicModel::KinematicModel(Robot robot):robot_(robot){
 
     initVariables();
-    std::cout << "Kinematic model constructed! " << std::endl;
+    // std::cout << "Kinematic model constructed! " << std::endl;
 }
 
 void KinematicModel::initVariables(){

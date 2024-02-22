@@ -22,7 +22,6 @@ Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::Vect
     backwardRecursion(q);
 
     return  u_;
-
 }
 
 void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq){
@@ -45,7 +44,6 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
         d_omega_.at(i+1) = R_transpose*(d_omega_.at(i) + ddq[i]*z + dq[i]*(omega_.at(i).cross(z)));
         a_.at(i+1) = R_transpose*a_.at(i) + d_omega_.at(i+1).cross(R_transpose*t) + omega_.at(i+1).cross(omega_.at(i+1).cross(R_transpose*t));    
         ac_.at(i) = a_.at(i+1) + d_omega_.at(i+1).cross(cog_.at(i)) + omega_.at(i+1).cross(omega_.at(i+1).cross(cog_.at(i)));
-
     }
 
 }
