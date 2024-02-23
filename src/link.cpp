@@ -9,7 +9,7 @@ Link::Link(int link_number, DHParams dh_params, DynamicParameters dynamic_parame
                                                                                     dh_params_(dh_params),
                                                                                     dynamic_parameters_(dynamic_parameters)
 {
-    std::cout << "[Link] Link " << link_number_ << " constructed" << std::endl;
+    // std::cout << "[Link] Link " << link_number_ << " constructed" << std::endl;
 }
 
 void Link::setLinkNumber(const int link_number){

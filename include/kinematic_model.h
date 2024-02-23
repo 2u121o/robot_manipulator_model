@@ -52,11 +52,9 @@ class KinematicModel{
 
         /** @brief Compute the forward kinematics between two specified links 
         *  
-        *  @param idx_links is the vector containing the indeces of the link
-        *                   origins for which we want to compute the forward
-        *                   kinematic
+        *  @param idx_links ...........
         */
-        void computeForwardKinematic(const std::vector<int> idx_links);
+        void computeForwardKinematic(const int start_link_idx, const int end_link_idx);
 
         /** @brief Compute the Jacobian at the endeffector starting from the 
         *         robot base
@@ -80,7 +78,7 @@ class KinematicModel{
         *  @return a three dimensional vector that represent the positoin
         *          of the endeffector in the base frame
         */
-        Eigen::Vector3d getTrans();
+        Eigen::Vector3d getTrans(const int start_link_idx, const int end_link_idx);
 
         /** @brief Get the orientation of the end effector w.r.t. the base frame
         *
@@ -89,7 +87,7 @@ class KinematicModel{
         *                describes the orientation of the endeffector with respect to the 
         *                base frame 
         */
-        Eigen::Matrix3d getR();
+        Eigen::Matrix3d getR(const int start_link_idx, const int end_link_idx);
 
         /** @brief Get the geometric Jacobian from the base frame to the endeffector
         *
@@ -112,10 +110,10 @@ class KinematicModel{
         Eigen::VectorXd q_;
 
         //! @brief Three dimensional vector that represnts the translation between the origin of two reference frames
-        Eigen::Vector3d trans_;
+        Eigen::VectorXd trans_;
 
         //! @brief Orthonormal matrix that represents the rotation between two reference frames
-        Eigen::Matrix3d R_;
+        Eigen::MatrixXd R_;
 
         //! @brief Geometric jacobian between two referene frame. The dimension of the matrix is 6 X dofs_
         Eigen::MatrixXd jacobian_;

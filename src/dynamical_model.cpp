@@ -6,6 +6,7 @@ DynamicalModel::DynamicalModel(Robot robot):robot_(robot){
     
     resizeVariables();
     initializeDynamicParameters();
+    kinematic_model_ = KinematicModel(robot_);
 }
 
 
@@ -14,14 +15,13 @@ Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::Vect
 
     initializeMatrices(gravity);
 
-    kinematic_model_ = KinematicModel(robot_);
     kinematic_model_.setQ(q);
+    kinematic_model_.computeForwardKinematic(0,q.size());
 
     forwardRecursion(q, dq, ddq);
     backwardRecursion(q);
 
     return  u_;
-
 }
 
 void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq){
@@ -35,11 +35,8 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
   
     for(short int i=0; i<dofs_; i++){
 
-        kinematic_model_.setQ(q);
-        std::vector<int> link_origins = {i,i+1};
-        kinematic_model_.computeForwardKinematic(link_origins);
-        R = kinematic_model_.getR();
-        t = kinematic_model_.getTrans();
+        R = kinematic_model_.getR(i,i+1);
+        t = kinematic_model_.getTrans(i,i+1);
 
         R_transpose = R.transpose();
 
@@ -47,7 +44,6 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
         d_omega_.at(i+1) = R_transpose*(d_omega_.at(i) + ddq[i]*z + dq[i]*(omega_.at(i).cross(z)));
         a_.at(i+1) = R_transpose*a_.at(i) + d_omega_.at(i+1).cross(R_transpose*t) + omega_.at(i+1).cross(omega_.at(i+1).cross(R_transpose*t));    
         ac_.at(i) = a_.at(i+1) + d_omega_.at(i+1).cross(cog_.at(i)) + omega_.at(i+1).cross(omega_.at(i+1).cross(cog_.at(i)));
-
     }
 
 }
@@ -75,15 +71,13 @@ void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q){
 
     for(short int i=dofs_-1; i>=0; i--){
 
-        kinematic_model_.setQ(q);
-        std::vector<int> link_origins = {i,i+1};
-        kinematic_model_.computeForwardKinematic(link_origins);
-        R = kinematic_model_.getR();
-        t = kinematic_model_.getTrans();
+        // kinematic_model_.setQ(q);
+        R = kinematic_model_.getR(i,i+1);
+        t = kinematic_model_.getTrans(i,i+1);
 
         R_transpose = R.transpose();
 
-       f_.at(i) = Rp1*f_.at(i+1) + mass_[i]*(ac_.at(i));
+        f_.at(i) = Rp1*f_.at(i+1) + mass_[i]*(ac_.at(i));
        
         tau_.at(i) = Rp1*tau_.at(i+1) + (Rp1*f_.at(i+1)).cross(cog_.at(i)) - f_.at(i).cross(R_transpose*t + cog_.at(i)) +
                     inertia_.at(i)*(d_omega_.at(i+1)) + omega_.at(i+1).cross(inertia_.at(i) * (omega_.at(i+1)));
@@ -104,7 +98,7 @@ void DynamicalModel::initializeMatrices(const Eigen::Vector3d gravity){
         tau_.at(i).setZero();
         if(i<dofs_) ac_.at(i).setZero();
     }
-    a_.at(0) = gravity;
+    a_.at(0) = -gravity;
 
     u_.setZero();
     
