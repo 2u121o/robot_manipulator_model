@@ -19,6 +19,7 @@ void InverseKinematic::solveIk(Eigen::VectorXd &solution){
     int first_link = 0;
     int last_link = dofs_-1;
     kinematic_model_.setQ(solution);
+
     kinematic_model_.computeForwardKinematic(first_link, last_link);
     //kinematic_model_.computeJacobian();
    // kinematic_model_.getJacobian();

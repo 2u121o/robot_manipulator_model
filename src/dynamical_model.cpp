@@ -71,7 +71,7 @@ void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q){
 
     for(short int i=dofs_-1; i>=0; i--){
 
-        kinematic_model_.setQ(q);
+        // kinematic_model_.setQ(q);
         R = kinematic_model_.getR(i,i+1);
         t = kinematic_model_.getTrans(i,i+1);
 
