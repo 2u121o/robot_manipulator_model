@@ -12,12 +12,11 @@ class Link{
     public:
 
         Link();
-        Link(int link_number, DHParams dh_params, DynamicParameters dynamic_parameters);
-        ~Link();
+        Link(const int link_number, const DHParams &dh_params, const DynamicParameters &dynamic_parameters);
 
         void setLinkNumber(const int link_number);
         void setDHParams(const DHParams &dh_params);
-        void setDynamicParameters(const DynamicParameters dynamic_parameters);
+        void setDynamicParameters(const DynamicParameters &dynamic_parameters);
 
         int getLinkNumber();
         void getDHParams(DHParams &dh_params);

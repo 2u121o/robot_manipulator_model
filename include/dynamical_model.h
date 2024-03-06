@@ -30,7 +30,6 @@ class DynamicalModel{
 
 public:
     DynamicalModel(Robot robot);
-    ~DynamicalModel();
 
     Eigen::VectorXd rnea(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq, const Eigen::Vector3d gravity);
 

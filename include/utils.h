@@ -11,7 +11,7 @@ struct DHParams{
 
     /**
      * @brief Angle between the x axis of two reference frames about the z axis of the first reference frame.
-     * The angle is positive when the rotation is made conunter-clockwise.
+     * The angle is positive when the rotation is made counter-clockwise.
      * 
      */
     double theta;
@@ -29,8 +29,8 @@ struct DHParams{
     double a;
 
     /**
-     * @brief Angle between the z axes of two reference frame about the x axis of the sencond 
-     * reference frame. The angle is positive when the rotation is made conunter-clockwise.
+     * @brief Angle between the z axes of two reference frame about the x axis of the second 
+     * reference frame. The angle is positive when the rotation is made counter-clockwise.
      * 
      */
     double alpha;
@@ -56,7 +56,7 @@ struct DynamicParameters{
     Eigen::Vector3d com;
 
     /**
-     * @brief 6D vector containing the component of the inertia tensor. The remaing
+     * @brief 6D vector containing the component of the inertia tensor. The remaining
      * three components can be deduce since the matrix is symmetric.
      * 
      */

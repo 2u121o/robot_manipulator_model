@@ -4,7 +4,8 @@ KinematicModel::KinematicModel(){
 
 }
 
-KinematicModel::KinematicModel(Robot robot):robot_(robot){
+KinematicModel::KinematicModel(Robot robot):robot_(robot)
+{
 
     initVariables();
     // std::cout << "Kinematic model constructed! " << std::endl;
@@ -12,7 +13,7 @@ KinematicModel::KinematicModel(Robot robot):robot_(robot){
 
 void KinematicModel::initVariables(){
 
-    std::vector<Link> links;
+    std::forward_list<Link> links;
     robot_.getLinks(links);
 
     dofs_=  robot_.getDofs();
@@ -27,17 +28,17 @@ void KinematicModel::initVariables(){
     q_.setZero();
     jacobian_.setZero();
 
-    for(int i=0; i<dofs_; i++){
-
-        Link link = links.at(i);
-
-        DHParams dh_params;
+    int i=0;  
+    DHParams dh_params;
+    for(auto link : links)
+    {
         link.getDHParams(dh_params);
 
         theta_(i) = dh_params.theta;
         d_(i) = dh_params.d;
         a_(i) = dh_params.a;
         alpha_(i) = dh_params.alpha;
+        i++;
 
     }
 
