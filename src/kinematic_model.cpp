@@ -129,7 +129,3 @@ Eigen::Matrix3d KinematicModel::getR(const int start_link_idx, const int end_lin
 void KinematicModel::getJacobian(Eigen::MatrixXd &jacobian){
     jacobian = jacobian_;
 }
-
-KinematicModel::~KinematicModel(){
-
-}

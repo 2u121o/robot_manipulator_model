@@ -7,60 +7,64 @@
  * @brief Structure that contains the robots DH parameters
  * 
  */
-struct DHParams{
+template <typename T>
+struct DHParams
+{
 
     /**
      * @brief Angle between the x axis of two reference frames about the z axis of the first reference frame.
      * The angle is positive when the rotation is made counter-clockwise.
      * 
      */
-    double theta;
+    T theta;
 
     /**
      * @brief Coordinate of two reference frame along the z axis of the previous reference frame
      * 
      */
-    double d;
+    T d;
 
     /**
      * @brief Distance between the origin of two reference frame.
      * 
      */
-    double a;
+    T a;
 
     /**
      * @brief Angle between the z axes of two reference frame about the x axis of the second 
      * reference frame. The angle is positive when the rotation is made counter-clockwise.
      * 
      */
-    double alpha;
+    T alpha;
 };
 
 /**
  * @brief Structure that contains the robots dynamic parameters.
  * 
  */
-struct DynamicParameters{
+template <typename T>
+struct DynamicParameters
+{
 
     /**
      * @brief Links mass.
      * 
      */
-    double mass;
+    T mass;
 
     /**
      * @brief 3D vector that represents the position of the center of mass
      * in the reference frame of the current link.
      * 
      */
-    Eigen::Vector3d com;
+    Eigen::Matrix<T, 3, 1> com;
 
     /**
      * @brief 6D vector containing the component of the inertia tensor. The remaining
      * three components can be deduce since the matrix is symmetric.
      * 
      */
-    Eigen::VectorXd inertia;
+    Eigen::Matrix<T, 6, 6> inertia;
 };
 
 #endif

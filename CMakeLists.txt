@@ -19,17 +19,17 @@ include_directories(include)
 include_directories(/usr/include/jsoncpp/)
 
 set(SOURCES
-    src/dynamical_model.cpp
-    src/kinematic_model.cpp
-    # src/inverse_kinematic.cpp
-    src/link.cpp
-    src/robot.cpp
+    # src/dynamical_model.cpp
+    # src/kinematic_model.cpp
+    # # src/inverse_kinematic.cpp
+    # src/link.cpp
+    # src/robot.cpp
     src/main.cpp
 )
 
 set(HEADERS
-    include/dynamical_model.h
-    include/kinematic_model.h
+    # include/dynamical_model.h
+    # include/kinematic_model.h
     # include/inverse_kinematic.h
     include/link.h
     include/robot.h

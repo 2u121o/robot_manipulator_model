@@ -6,7 +6,7 @@
 
 #include "dynamical_model.h"
 #include "kinematic_model.h"
-#include "inverse_kinematic.h"
+// #include "inverse_kinematic.h"
 #include "robot.h"
 
 
@@ -26,9 +26,11 @@ int main(int argc, char *argv[])
     //otherwise it returns always the same number
     srand((unsigned int) time(0));
 
-    Eigen::VectorXd q_test;
-    Eigen::VectorXd dq;
-    Eigen::VectorXd ddq;
+    typedef double RobotType;
+
+    Eigen::Matrix<RobotType, Eigen::Dynamic, 1> q_test;
+    Eigen::Matrix<RobotType, Eigen::Dynamic, 1> dq;
+    Eigen::Matrix<RobotType, Eigen::Dynamic, 1> ddq;
 
     q_test.resize(DOFS);
     dq.resize(DOFS);
@@ -42,23 +44,24 @@ int main(int argc, char *argv[])
     //q_test <<  0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
     std::string param_file = "../robots/robot_parameters.json";
-    Robot robot;
+    Robot<RobotType> robot;
     robot.buildRobotFromFile(param_file);
 
-    // std::forward_list<Link> links;
+    // std::forward_list<Link<float>> links;
     // robot.getLinks(links);
 
-    // DynamicParameters dynamic_parameter;
-    // for(Link& link : links)
+    // DynamicParameters<float> dynamic_parameter;
+    // for(Link<float>& link : links)
     // {
     //     link.getDynamicParameters(dynamic_parameter);
     //     std::cout << "dynamic_parameter.mass: " <<  dynamic_parameter.mass << std::endl;
     // }
 
-    Eigen::VectorXd g;
+
+    Eigen::Matrix<RobotType, Eigen::Dynamic, 1> g;
     g.resize(DOFS);
-    DynamicalModel model_g(robot);
-    Eigen::Vector3d gravity_g;
+    DynamicalModel<RobotType> model_g(robot);
+    Eigen::Matrix<RobotType, 3, 1> gravity_g;
     gravity_g << 0,0, -9.81;
     dq.setZero();
     ddq.setZero();
