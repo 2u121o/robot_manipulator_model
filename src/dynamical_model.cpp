@@ -1,7 +1,7 @@
 #include "dynamical_model.h"
 
-DynamicalModel::DynamicalModel(Robot robot):robot_(robot){
-
+DynamicalModel::DynamicalModel(Robot robot):robot_(robot)
+{
     dofs_ = robot.getDofs();
     
     resizeVariables();
@@ -11,8 +11,8 @@ DynamicalModel::DynamicalModel(Robot robot):robot_(robot){
 
 
 
-Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq, const Eigen::Vector3d gravity){
-
+Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq, const Eigen::Vector3d gravity)
+{
     initializeMatrices(gravity);
 
     kinematic_model_.setQ(q);
@@ -24,8 +24,8 @@ Eigen::VectorXd DynamicalModel::rnea(const Eigen::VectorXd &q, const Eigen::Vect
     return  u_;
 }
 
-void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq){
-
+void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::VectorXd &dq, const Eigen::VectorXd &ddq)
+{
     Eigen::Vector3d z;
     z << 0, 0, 1;
 
@@ -49,8 +49,8 @@ void DynamicalModel::forwardRecursion(const Eigen::VectorXd &q, const Eigen::Vec
 }
 
 
-void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q){
-
+void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q)
+{
 
     Eigen::Vector3d z;
     z << 0, 0, 1;
@@ -88,8 +88,8 @@ void DynamicalModel::backwardRecursion(const Eigen::VectorXd &q){
 
 }
 
-void DynamicalModel::initializeMatrices(const Eigen::Vector3d gravity){
-
+void DynamicalModel::initializeMatrices(const Eigen::Vector3d gravity)
+{
     for(short int i=0; i<dofs_+1; i++){
         omega_.at(i).setZero();
         d_omega_.at(i).setZero();
@@ -100,12 +100,11 @@ void DynamicalModel::initializeMatrices(const Eigen::Vector3d gravity){
     }
     a_.at(0) = -gravity;
 
-    u_.setZero();
-    
+    u_.setZero();   
 }
 
-void DynamicalModel::resizeVariables(){
-
+void DynamicalModel::resizeVariables()
+{
     mass_.resize(dofs_);
     inertia_.resize(dofs_);
     cog_.resize(dofs_);
@@ -119,36 +118,34 @@ void DynamicalModel::resizeVariables(){
     tau_.resize(dofs_+1);
 
     u_.resize(dofs_);
-
 }
 
-void DynamicalModel::initializeDynamicParameters(){
-
-    std::vector<Link> links;
+void DynamicalModel::initializeDynamicParameters()
+{
+    std::forward_list<Link> links;
     robot_.getLinks(links);
-    for(int link_id=0; link_id<dofs_; link_id++){
-         
-        DynamicParameters dynamic_parameters;
-        links[link_id].getDynamicParameters(dynamic_parameters);
+    int link_id=0;
+    DynamicParameters dynamic_parameters;
+
+    for(auto link : links)
+    {
+        link.getDynamicParameters(dynamic_parameters);
 
         mass_(link_id) = dynamic_parameters.mass;
         cog_.at(link_id) = dynamic_parameters.com;
 
-        Eigen::VectorXd iv = dynamic_parameters.inertia;
+        Eigen::VectorXd inertia = dynamic_parameters.inertia;
     
         int count = 0;
         const int MATRIX_DIM = 3;
         for(int i=0; i<MATRIX_DIM; i++){
             for(int j=i; j<MATRIX_DIM; j++){
-                double element = iv(count++);
+                double element = inertia(count++);
                 inertia_.at(i)(i,j) = element;
                 inertia_.at(i)(j,i) = element;
             }
         }
-
+        link_id++;
     }
 }
-
-DynamicalModel::~DynamicalModel(){}
-
 

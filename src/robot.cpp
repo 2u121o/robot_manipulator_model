@@ -1,13 +1,13 @@
 #include "robot.h"
 
 
-Robot::Robot(){
-
+Robot::Robot()
+{
     std::cout << "Robot constructed! Fill the structure." << std::endl;
-
 }
 
-void Robot::buildRobotFromFile(std::string file_name){
+void Robot::buildRobotFromFile(std::string file_name)
+{
 
     std::ifstream parameters_file(file_name);
 
@@ -15,7 +15,8 @@ void Robot::buildRobotFromFile(std::string file_name){
     Json::Reader reader;
     bool is_parsing_succesful = reader.parse(parameters_file, root);
 
-    if(!is_parsing_succesful){
+    if(!is_parsing_succesful)
+    {
         //TODO: lauch an exception
         std::cout << "Failed to parse JSON: " << reader.getFormattedErrorMessages() << std::endl;
     }
@@ -25,11 +26,9 @@ void Robot::buildRobotFromFile(std::string file_name){
     std::string robot_name = root["robot"]["name"].asString();
     dofs_ = root["robot"]["dofs"].asInt();
 
-    links_.resize(dofs_);
-
     Json::Value links = root["robot"]["links"];
-    for(int link_number=0; link_number<dofs_; link_number++){
-
+    for(int link_number=dofs_-1; link_number>=0; link_number--)
+    {
         DHParams dh_params;
         Json::Value dh_value = links[link_number]["dh"];
         dh_params.theta = dh_value["theta"].asDouble();
@@ -60,23 +59,22 @@ void Robot::buildRobotFromFile(std::string file_name){
         dynamic_parameters.inertia = inertia;
 
         Link link(link_number, dh_params, dynamic_parameters);
-        links_.at(link_number) = link;
+        links_.push_front(link);
     } 
 
     parameters_file.close();
 
 }
 
-void Robot::getLinks(std::vector<Link> &links){
+void Robot::getLinks(std::forward_list<Link> &links)
+{
     links = links_;
 }
 
-int Robot::getDofs(){
+int Robot::getDofs()
+{
     return dofs_;
 }
 
-Robot::~Robot(){
-
-}
 
         

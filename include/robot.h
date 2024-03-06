@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <forward_list>
 
 #include <Eigen/Dense>
 #include <json/json.h>
@@ -16,18 +17,18 @@ class Robot
     public:
 
         Robot();
-        ~Robot();
 
         void buildRobotFromFile(std::string file_name);
 
-        void getLinks(std::vector<Link> &links);
+        void getLinks(std::forward_list<Link> &links);
 
         int getDofs();
 
     private:
 
         int dofs_;
-        std::vector<Link> links_;
+        // std::vector<Link> links_;
+        std::forward_list<Link> links_;
       
 };
 

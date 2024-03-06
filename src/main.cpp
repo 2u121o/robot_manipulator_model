@@ -45,6 +45,15 @@ int main(int argc, char *argv[])
     Robot robot;
     robot.buildRobotFromFile(param_file);
 
+    // std::forward_list<Link> links;
+    // robot.getLinks(links);
+
+    // DynamicParameters dynamic_parameter;
+    // for(Link& link : links)
+    // {
+    //     link.getDynamicParameters(dynamic_parameter);
+    //     std::cout << "dynamic_parameter.mass: " <<  dynamic_parameter.mass << std::endl;
+    // }
 
     Eigen::VectorXd g;
     g.resize(DOFS);
