@@ -28,13 +28,9 @@ int main(int argc, char *argv[])
 
     typedef double RobotType;
 
-    Eigen::Matrix<RobotType, Eigen::Dynamic, 1> q_test;
-    Eigen::Matrix<RobotType, Eigen::Dynamic, 1> dq;
-    Eigen::Matrix<RobotType, Eigen::Dynamic, 1> ddq;
-
-    q_test.resize(DOFS);
-    dq.resize(DOFS);
-    ddq.resize(DOFS);
+    Eigen::Matrix<RobotType, DOFS, 1> q_test;
+    Eigen::Matrix<RobotType, DOFS, 1> dq;
+    Eigen::Matrix<RobotType, DOFS, 1> ddq;
 
     int first_link = 0;
     int last_link = 5;
@@ -58,9 +54,8 @@ int main(int argc, char *argv[])
     // }
 
 
-    Eigen::Matrix<RobotType, Eigen::Dynamic, 1> g;
-    g.resize(DOFS);
-    DynamicalModel<RobotType> model_g(robot);
+    Eigen::Matrix<RobotType, DOFS, 1> g;
+    DynamicalModel<RobotType, DOFS> model_g(robot);
     Eigen::Matrix<RobotType, 3, 1> gravity_g;
     gravity_g << 0,0, -9.81;
     dq.setZero();

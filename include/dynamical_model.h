@@ -26,43 +26,43 @@
  * @enddot
  * @relates KinematicModel
  */
-template <typename T>
+template <typename T, int DOF>
 class DynamicalModel{
 
 public:
     DynamicalModel(Robot<T> robot);
 
-    Eigen::Matrix<T, Eigen::Dynamic, 1> rnea(const Eigen::Matrix<T, Eigen::Dynamic, 1> &q, const Eigen::Matrix<T, Eigen::Dynamic, 1> &dq, const Eigen::Matrix<T, Eigen::Dynamic, 1> &ddq, const Eigen::Matrix<T, 3, 1> gravity);
+    Eigen::Matrix<T, DOF, 1> rnea(const Eigen::Matrix<T, DOF, 1> &q, const Eigen::Matrix<T, DOF, 1> &dq, const Eigen::Matrix<T, DOF, 1> &ddq, const Eigen::Matrix<T, 3, 1> gravity);
 
 private:
 
     int dofs_;
 
-    Eigen::Matrix<T, Eigen::Dynamic, 1> mass_;
+    Eigen::Matrix<T, DOF, 1> mass_;
 
     
-    KinematicModel<T> kinematic_model_;
+    KinematicModel<T, DOF> kinematic_model_;
     Robot<T> robot_;
 
     //cogs expressed wrt the next frame so ready to use in the formulas without transformation
-    std::vector<Eigen::Matrix<T, 3, 3>> inertia_; //3X3N tensor contains inertia matrix for each link
-    std::vector<Eigen::Matrix<T, 3, 1>> cog_;     //3XN matrix contains cog vector for each link
+    std::vector<Eigen::Matrix<T, 3, 3>> inertia_ = std::vector<Eigen::Matrix<T, 3, 3>>(DOF, Eigen::Matrix<T, 3, 3>::Zero()); //3X3N tensor contains inertia matrix for each link
+    std::vector<Eigen::Matrix<T, 3, 1>> cog_ = std::vector<Eigen::Matrix<T, 3, 1>>(DOF, Eigen::Matrix<T, 3, 1>::Zero());     //3XN matrix contains cog vector for each link
 
-    std::vector<Eigen::Matrix<T, 3, 1>> omega_;    //angular velocity
-    std::vector<Eigen::Matrix<T, 3, 1>> d_omega_;  //angular acceleration
-    std::vector<Eigen::Matrix<T, 3, 1>> a_;      //linear acceleration at frame i in frame i
-    std::vector<Eigen::Matrix<T, 3, 1>> ac_;     //linear acceleration of the cog in frame i
+    std::vector<Eigen::Matrix<T, 3, 1>> omega_  = std::vector<Eigen::Matrix<T, 3, 1>>(DOF+1, Eigen::Matrix<T, 3, 1>::Zero());    //angular velocity
+    std::vector<Eigen::Matrix<T, 3, 1>> d_omega_ = std::vector<Eigen::Matrix<T, 3, 1>>(DOF+1, Eigen::Matrix<T, 3, 1>::Zero());  //angular acceleration
+    std::vector<Eigen::Matrix<T, 3, 1>> a_ = std::vector<Eigen::Matrix<T, 3, 1>>(DOF+1, Eigen::Matrix<T, 3, 1>::Zero());      //linear acceleration at frame i in frame i
+    std::vector<Eigen::Matrix<T, 3, 1>> ac_ = std::vector<Eigen::Matrix<T, 3, 1>>(DOF, Eigen::Matrix<T, 3, 1>::Zero());     //linear acceleration of the cog in frame i
 
-    std::vector<Eigen::Matrix<T, 3, 1>> f_;        //linear forces applied at the origin of the RF
-    std::vector<Eigen::Matrix<T, 3, 1>> tau_;      //tourques
+    std::vector<Eigen::Matrix<T, 3, 1>> f_ = std::vector<Eigen::Matrix<T, 3, 1>>(DOF+1, Eigen::Matrix<T, 3, 1>::Zero());        //linear forces applied at the origin of the RF
+    std::vector<Eigen::Matrix<T, 3, 1>> tau_ = std::vector<Eigen::Matrix<T, 3, 1>>(DOF+1, Eigen::Matrix<T, 3, 1>::Zero());      //tourques
 
-    Eigen::Matrix<T, Eigen::Dynamic, 1> u_;                     //tau_ after projection
+    Eigen::Matrix<T, DOF, 1> u_;                     //tau_ after projection
 
     void initializeMatrices(const Eigen::Matrix<T, 3, 1> gravity);
 
-    void forwardRecursion(const Eigen::Matrix<T, Eigen::Dynamic, 1> &q, const Eigen::Matrix<T, Eigen::Dynamic, 1> &dq, const Eigen::Matrix<T, Eigen::Dynamic, 1> &ddq);
+    void forwardRecursion(const Eigen::Matrix<T, DOF, 1> &q, const Eigen::Matrix<T, DOF, 1> &dq, const Eigen::Matrix<T, DOF, 1> &ddq);
 
-    void backwardRecursion(const Eigen::Matrix<T, Eigen::Dynamic, 1> &q);
+    void backwardRecursion(const Eigen::Matrix<T, DOF, 1> &q);
 
     /**
      * @brief Resize vectors using the dofs in the robot object.
@@ -79,22 +79,21 @@ private:
 };
 
 
-template <typename T>
-DynamicalModel<T>::DynamicalModel(Robot<T> robot):robot_(robot)
+template <typename T, int DOF>
+DynamicalModel<T, DOF>::DynamicalModel(Robot<T> robot):robot_(robot)
 {
     dofs_ = robot.getDofs();
     
     resizeVariables();
     initializeDynamicParameters();
-    kinematic_model_ = KinematicModel<T>(robot_);
+    kinematic_model_ = KinematicModel<T, DOF>(robot_);
 }
 
 
-template <typename T>
-Eigen::Matrix<T, Eigen::Dynamic, 1> DynamicalModel<T>::rnea(const Eigen::Matrix<T, Eigen::Dynamic, 1> &q, const Eigen::Matrix<T, Eigen::Dynamic, 1> &dq, const Eigen::Matrix<T, Eigen::Dynamic, 1> &ddq, const Eigen::Matrix<T, 3, 1> gravity)
+template <typename T, int DOF>
+Eigen::Matrix<T, DOF, 1> DynamicalModel<T, DOF>::rnea(const Eigen::Matrix<T, DOF, 1> &q, const Eigen::Matrix<T, DOF, 1> &dq, const Eigen::Matrix<T, DOF, 1> &ddq, const Eigen::Matrix<T, 3, 1> gravity)
 {
     initializeMatrices(gravity);
-
     kinematic_model_.setQ(q);
     kinematic_model_.computeForwardKinematic(0,q.size());
 
@@ -104,8 +103,8 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> DynamicalModel<T>::rnea(const Eigen::Matrix<
     return  u_;
 }
 
-template <typename T>
-void DynamicalModel<T>::forwardRecursion(const Eigen::Matrix<T, Eigen::Dynamic, 1> &q, const Eigen::Matrix<T, Eigen::Dynamic, 1> &dq, const Eigen::Matrix<T, Eigen::Dynamic, 1> &ddq)
+template <typename T, int DOF>
+void DynamicalModel<T, DOF>::forwardRecursion(const Eigen::Matrix<T, DOF, 1> &q, const Eigen::Matrix<T, DOF, 1> &dq, const Eigen::Matrix<T, DOF, 1> &ddq)
 {
     Eigen::Matrix<T, 3, 1> z;
     z << 0, 0, 1;
@@ -114,7 +113,7 @@ void DynamicalModel<T>::forwardRecursion(const Eigen::Matrix<T, Eigen::Dynamic, 
     Eigen::Matrix<T, 3, 3> R_transpose;
     Eigen::Matrix<T, 3, 1> t;
   
-    for(short int i=0; i<dofs_; i++){
+    for(short int i=0; i<DOF; i++){
 
         R = kinematic_model_.getR(i,i+1);
         t = kinematic_model_.getTrans(i,i+1);
@@ -129,8 +128,8 @@ void DynamicalModel<T>::forwardRecursion(const Eigen::Matrix<T, Eigen::Dynamic, 
 
 }
 
-template <typename T>
-void DynamicalModel<T>::backwardRecursion(const Eigen::Matrix<T, Eigen::Dynamic, 1> &q)
+template <typename T, int DOF>
+void DynamicalModel<T, DOF>::backwardRecursion(const Eigen::Matrix<T, DOF, 1> &q)
 {
 
     Eigen::Matrix<T, 3, 1> z;
@@ -150,7 +149,7 @@ void DynamicalModel<T>::backwardRecursion(const Eigen::Matrix<T, Eigen::Dynamic,
            0, 1, 0,
            0, 0, 1;
 
-    for(short int i=dofs_-1; i>=0; i--){
+    for(short int i=DOF-1; i>=0; i--){
 
         // kinematic_model_.setQ(q);
         R = kinematic_model_.getR(i,i+1);
@@ -169,42 +168,42 @@ void DynamicalModel<T>::backwardRecursion(const Eigen::Matrix<T, Eigen::Dynamic,
 
 }
 
-template <typename T>
-void DynamicalModel<T>::initializeMatrices(const Eigen::Matrix<T, 3, 1> gravity)
+template <typename T, int DOF>
+void DynamicalModel<T, DOF>::initializeMatrices(const Eigen::Matrix<T, 3, 1> gravity)
 {
-    for(short int i=0; i<dofs_+1; i++){
-        omega_.at(i).setZero();
-        d_omega_.at(i).setZero();
-        a_.at(i).setZero();
-        f_.at(i).setZero();
-        tau_.at(i).setZero();
-        if(i<dofs_) ac_.at(i).setZero();
-    }
+    // for(short int i=0; i<dofs_+1; i++){
+    //     omega_.at(i).setZero();
+    //     d_omega_.at(i).setZero();
+    //     a_.at(i).setZero();
+    //     f_.at(i).setZero();
+    //     tau_.at(i).setZero();
+    //     if(i<dofs_) ac_.at(i).setZero();
+    // }
     a_.at(0) = -gravity;
 
     u_.setZero();   
 }
 
-template <typename T>
-void DynamicalModel<T>::resizeVariables()
+template <typename T, int DOF>
+void DynamicalModel<T, DOF>::resizeVariables()
 {
-    mass_.resize(dofs_);
-    inertia_.resize(dofs_);
-    cog_.resize(dofs_);
+    // mass_.resize(dofs_);
+    // inertia_.resize(dofs_);
+    // cog_.resize(dofs_);
 
-    omega_.resize(dofs_+1);
-    d_omega_.resize(dofs_+1);
-    a_.resize(dofs_+1);
-    ac_.resize(dofs_);
+    // omega_.resize(dofs_+1);
+    // d_omega_.resize(dofs_+1);
+    // a_.resize(dofs_+1);
+    // ac_.resize(dofs_);
 
-    f_.resize(dofs_+1);
-    tau_.resize(dofs_+1);
+    // f_.resize(dofs_+1);
+    // tau_.resize(dofs_+1);
 
-    u_.resize(dofs_);
+    // u_.resize(dofs_);
 }
 
-template <typename T>
-void DynamicalModel<T>::initializeDynamicParameters()
+template <typename T, int DOF>
+void DynamicalModel<T, DOF>::initializeDynamicParameters()
 {
     std::forward_list<Link<T>> links;
     robot_.getLinks(links);

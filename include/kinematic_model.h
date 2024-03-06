@@ -25,7 +25,7 @@
  *}
  * @enddot
  */
-template <typename T>
+template <typename T, int DOF>
 class KinematicModel{
 
     public:
@@ -61,13 +61,13 @@ class KinematicModel{
         *
         *  @param q is the joint position
         */
-        void setQ(const Eigen::Matrix<T, Eigen::Dynamic, 1> &q);
+        void setQ(const Eigen::Matrix<T, DOF, 1> &q);
 
         /** @brief Get the joint position q
         *
         *  @return is the actual joint position
         */
-        Eigen::Matrix<T, Eigen::Dynamic, 1> getQ();
+        Eigen::Matrix<T, DOF, 1> getQ();
 
         /** @brief Get the position of the end effector in the base frame
         *
@@ -91,7 +91,7 @@ class KinematicModel{
         *                  The matrix represent the geometric Jacobian from the robot
         *                  base to the endeffector
         */
-        void getJacobian(Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> &jacobian);
+        void getJacobian(Eigen::Matrix<T, DOF, DOF> &jacobian);
 
     private:
 
@@ -103,30 +103,30 @@ class KinematicModel{
         Robot<T> robot_;
 
         //! @brief Joint position in radiants 
-        Eigen::Matrix<T, Eigen::Dynamic,1> q_;
+        Eigen::Matrix<T, DOF,1> q_;
 
         //! @brief Three dimensional vector that represnts the translation between the origin of two reference frames
-        Eigen::Matrix<T, Eigen::Dynamic,1> trans_;
+        Eigen::Matrix<T, 3*DOF,1> trans_;
 
         //! @brief Orthonormal matrix that represents the rotation between two reference frames
-        Eigen::Matrix<T, Eigen::Dynamic,Eigen::Dynamic> R_;
+        Eigen::Matrix<T, 3*DOF, 3*DOF> R_;
 
         //! @brief Geometric jacobian between two referene frame. The dimension of the matrix is 6 X dofs_
-        Eigen::Matrix<T, Eigen::Dynamic,Eigen::Dynamic> jacobian_;
+        Eigen::Matrix<T, DOF, DOF> jacobian_;
 
         //! @brief Angle between the x axis of two reference frames about the z axis of the first reference frame.
         //! The angle is positive when the rotation is made conunter-clockwise.
-        Eigen::Matrix<T, Eigen::Dynamic, 1> theta_;
+        Eigen::Matrix<T, DOF, 1> theta_;
 
         //! @brief Coordinate of two reference frame along the z axis of the previous reference frame
-        Eigen::Matrix<T, Eigen::Dynamic, 1> d_;
+        Eigen::Matrix<T, DOF, 1> d_;
 
         //! @brief Distance between the origin of two reference frame.
-        Eigen::Matrix<T, Eigen::Dynamic, 1> a_;
+        Eigen::Matrix<T, DOF, 1> a_;
 
         //! @brief Angle between the z axes of two reference frame about the x axis of the sencond 
         //! reference frame. The angle is positive when the rotation is made conunter-clockwise.
-        Eigen::Matrix<T, Eigen::Dynamic, 1> alpha_;
+        Eigen::Matrix<T, DOF, 1> alpha_;
         
         /**
          * @brief Resize all the necessary variable and initialize the kinematic  parameters with 
@@ -138,35 +138,28 @@ class KinematicModel{
 
 };
 
-template <typename T>
-KinematicModel<T>::KinematicModel()
+template <typename T, int DOF>
+KinematicModel<T, DOF>::KinematicModel()
 {
 
 }
 
-template <typename T>
-KinematicModel<T>::KinematicModel(Robot<T> robot):robot_(robot)
+template <typename T, int DOF>
+KinematicModel<T, DOF>::KinematicModel(Robot<T> robot):robot_(robot)
 {
 
     initVariables();
     // std::cout << "Kinematic model constructed! " << std::endl;
 }
 
-template <typename T>
-void KinematicModel<T>::initVariables()
+template <typename T, int DOF>
+void KinematicModel<T, DOF>::initVariables()
 {
 
     std::forward_list<Link<T>> links;
     robot_.getLinks(links);
 
     dofs_=  robot_.getDofs();
-
-    q_.resize(dofs_);
-    jacobian_.resize(dofs_, dofs_);
-    theta_.resize(dofs_);
-    d_.resize(dofs_);
-    a_.resize(dofs_);
-    alpha_.resize(dofs_);
 
     q_.setZero();
     jacobian_.setZero();
@@ -185,9 +178,6 @@ void KinematicModel<T>::initVariables()
 
     }
 
-    R_.resize(3*dofs_,3*dofs_);
-    trans_.resize(3*dofs_);
-
     R_.setIdentity();
     trans_.setIdentity();
 
@@ -198,8 +188,8 @@ void KinematicModel<T>::initVariables()
     // d_ << 0.089159, 0.0, 0.0, 0.10915, 0.09465, 0.0823;
 }
 
-template <typename T>
-void KinematicModel<T>::computeForwardKinematic(const int start_link_idx, const int end_link_idx){
+template <typename T, int DOF>
+void KinematicModel<T, DOF>::computeForwardKinematic(const int start_link_idx, const int end_link_idx){
  
 
     Eigen::Matrix<T, 3, 3> R; 
@@ -250,8 +240,8 @@ void KinematicModel<T>::computeForwardKinematic(const int start_link_idx, const 
 
 }
 
-template <typename T>
-void KinematicModel<T>::computeJacobian()
+template <typename T, int DOF>
+void KinematicModel<T, DOF>::computeJacobian()
 {
 
     Eigen::Matrix<T, 3, 1> pos_ee_absolute;
@@ -278,33 +268,33 @@ void KinematicModel<T>::computeJacobian()
     }
 }
 
-template <typename T>
-void KinematicModel<T>::setQ(const Eigen::Matrix<T, Eigen::Dynamic, 1> &q)
+template <typename T, int DOF>
+void KinematicModel<T, DOF>::setQ(const Eigen::Matrix<T, DOF, 1> &q)
 {
     q_ = q;
 }
 
-template <typename T>
-Eigen::Matrix<T, Eigen::Dynamic, 1> KinematicModel<T>::getQ()
+template <typename T, int DOF>
+Eigen::Matrix<T, DOF, 1> KinematicModel<T, DOF>::getQ()
 {
     return q_;
 }
 
-template <typename T>
-Eigen::Matrix<T, 3, 1> KinematicModel<T>::getTrans(const int start_link_idx, const int end_link_idx)
+template <typename T, int DOF>
+Eigen::Matrix<T, 3, 1> KinematicModel<T, DOF>::getTrans(const int start_link_idx, const int end_link_idx)
 {
     return trans_.segment(start_link_idx*3,end_link_idx*3-start_link_idx*3);
 }
 
-template <typename T>
-Eigen::Matrix<T, 3, 3> KinematicModel<T>::getR(const int start_link_idx, const int end_link_idx)
+template <typename T, int DOF>
+Eigen::Matrix<T, 3, 3> KinematicModel<T, DOF>::getR(const int start_link_idx, const int end_link_idx)
 {
     
     return R_.block(start_link_idx*3,start_link_idx*3,end_link_idx*3-start_link_idx*3,end_link_idx*3-start_link_idx*3);
 }
 
-template <typename T>
-void KinematicModel<T>::getJacobian(Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> &jacobian)
+template <typename T, int DOF>
+void KinematicModel<T, DOF>::getJacobian(Eigen::Matrix<T, DOF, DOF> &jacobian)
 {
     jacobian = jacobian_;
 }
