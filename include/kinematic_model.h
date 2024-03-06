@@ -205,48 +205,43 @@ void KinematicModel<T>::computeForwardKinematic(const int start_link_idx, const 
     Eigen::Matrix<T, 3, 3> R; 
     Eigen::Matrix<T, 3, 1> trans;
 
-    R_.resize(3*dofs_,3*dofs_);
-    trans_.resize(3*dofs_);
+    
 
     R_.setIdentity();
     trans_.setIdentity();
    
     for(int i=start_link_idx; i<end_link_idx; ++i)
     { 
-        double theta = theta_(i);
-        double alpha = alpha_(i);
-        double a = a_(i);
-        double d = d_(i);
+        T theta = theta_(i);
+        T alpha = alpha_(i);
+        T a = a_(i);
+        T d = d_(i);
         
         theta += q_[i];
 
+        T cos_theta, sin_theta;
+        T cos_alpha, sin_alpha;
+
         if constexpr(std::is_same<T, double>::value)
         {
-            double cos_theta, sin_theta;
-            double cos_alpha, sin_alpha;
-
+            
             sincos(theta, &sin_theta, &cos_theta);
             sincos(alpha, &sin_alpha, &cos_alpha);
 
-            R << cos_theta, -sin_theta*cos_alpha, sin_theta*sin_alpha,
-                 sin_theta, cos_theta*cos_alpha , -cos_alpha*sin_alpha,
-                  0           , sin_alpha              , cos_alpha;
-            trans << a*cos_theta, a*sin_theta, d;
         }
         else if constexpr(std::is_same<T, float>::value)
         {
-            float cos_theta, sin_theta;
-            float cos_alpha, sin_alpha;
 
             sincosf(theta, &sin_theta, &cos_theta);
             sincosf(alpha, &sin_alpha, &cos_alpha);
 
-            R << cos_theta, -sin_theta*cos_alpha, sin_theta*sin_alpha,
-                 sin_theta, cos_theta*cos_alpha , -cos_alpha*sin_alpha,
-                  0           , sin_alpha              , cos_alpha;
-
-            trans << a*cos_theta, a*sin_theta, d;
         }
+
+         R << cos_theta, -sin_theta*cos_alpha, sin_theta*sin_alpha,
+              sin_theta, cos_theta*cos_alpha , -cos_theta*sin_alpha,
+              0           , sin_alpha              , cos_alpha;
+
+        trans << a*cos_theta, a*sin_theta, d;
         
         trans_.segment(i*3,+3) += R_.block(i*3,i*3,3,3)*trans ;
         R_.block(i*3,i*3,3,3) *= R;

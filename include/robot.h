@@ -80,7 +80,7 @@ void Robot<T>::buildRobotFromFile(std::string file_name)
         com(2) = dynamic_parameters_value["com"][2].asDouble();
         dynamic_parameters.com = com;
 
-        Eigen::Matrix<T, 6, 6> inertia;
+        Eigen::Matrix<T, 6, 1> inertia;
         const int NUM_INERTIA_PARAMS = 6;
         Json::Value inertia_value = dynamic_parameters_value["inertia"];
         inertia(0) = inertia_value["Ixx"].asDouble();

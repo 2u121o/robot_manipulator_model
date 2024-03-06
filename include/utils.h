@@ -64,7 +64,7 @@ struct DynamicParameters
      * three components can be deduce since the matrix is symmetric.
      * 
      */
-    Eigen::Matrix<T, 6, 6> inertia;
+    Eigen::Matrix<T, 6, 1> inertia;
 };
 
 #endif

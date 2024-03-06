@@ -218,7 +218,7 @@ void DynamicalModel<T>::initializeDynamicParameters()
         mass_(link_id) = dynamic_parameters.mass;
         cog_.at(link_id) = dynamic_parameters.com;
 
-        Eigen::Matrix<T, 6, 6> inertia = dynamic_parameters.inertia;
+        Eigen::Matrix<T, 6, 1> inertia = dynamic_parameters.inertia;
     
         int count = 0;
         const int MATRIX_DIM = 3;
